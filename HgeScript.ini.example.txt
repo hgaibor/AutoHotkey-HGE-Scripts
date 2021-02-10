@@ -1,0 +1,154 @@
+# Written for AHK V1, not tested on V2 but may work similarly
+# Comments begin with # character
+# DO NOT PUT COMMENTS AFTER VARIABLES AS IT WILL BE PARSED AS PART OF THE ELEMENT
+# Rename this file EXACTLY THE SAME as the .ahk script (without extension), setting it as .ini 
+# If there is no .ini file, AHK script will exit
+# Due to some functions called inside of this script, AHK will request to run as Admin
+# This may be toggle-enabled on the future, but for now is not implemented
+# Even if script runs as Admin user, programs lauched will be run without privilege escalation
+[GeneralSettings]
+	# Optional variable to identify current running instance
+	# In theory, you may be able to run more than one instance with different names
+	# BUT NOT TESTED
+	WinEnvName="[HgePC]: "
+
+
+[VPNSettings]
+	# For the moment, ClientIP and FQDN are not used from .ini file, 
+	# FQDN is used to attempt to convert an URL into an IP by the FQDN_to_IP() function 
+	# AddIPtoRoute() function will use these variables to add the IP to the route of the VPN
+	ClientIP=""
+	FQDN=""
+	Mask="255.255.255.255"
+	Gateway="10.0.0.0"
+	# Descriptive name for the VPN (current script accepts single VPN declaration)
+	VpnName="Super Secret VPN"
+
+[CreateOpenFolder]
+	# Variables listed here will be used by the function ProcessFolderSlot()
+	# ProcessFolderSlot() will wait for a single digit key press defining the slot to use
+	# Then it will call CreateOpenFolder() function to open predefined folder paths or create new folder inside of them: 
+	# Current function supports ten slots with a single digit [0-9]
+	# No need to create each of the 10 slots, however if set up one, make sure to fill the three required variables
+	
+	# VARIABLES DESCRIPTION
+	## BaseFolderPath1= --> Base folder path to open or create folders into (no need to end with back slash \)
+	## LocationName1= --> Descriptive name for location (not filling it will show the name as ERROR)
+	## FolderOperation1= --> Current supported operations are [Open_Create|Open_Folder]
+	### [Open_Create]: Will display an input box to enter the name of the folder to create, or open if already present
+	### 							 No validation against invalid characters is made, so BE WARNED
+	### [Open_Folder]: Will open the path defined on the current slot
+
+	BaseFolderPath1="C:\Users\MyDocuments"
+	LocationName1="Documents"
+	FolderOperation1="Open_Create"
+
+	BaseFolderPath2="C:\Users\User1\Downloads"
+	LocationName2="Downloads folder"
+	FolderOperation2="Open_Folder"
+
+	.
+	.
+	.
+
+	BaseFolderPath9=
+	LocationName9=
+	FolderOperation9=
+
+	BaseFolderPath0=
+	LocationName0=
+	FolderOperation0=
+
+[ShowOrRunProgram]
+	# Variables listed here will be used by the function ShowOrRunProgram("PogramID") on the .ahk script
+	# PogramID can be any string, remove the brackets and make it unique to be able to map as many programs 
+	# as you need to tie to key shortcuts
+	# VARIABLES DESCRIPTION
+	## [ProgramID]-AhkExeName="" --> Program identifier, refer to https://www.autohotkey.com/docs/misc/WinTitle.htm for furhter info
+	## [ProgramID]-AhkGroupName="" --> String name allowing to group program instances (can be different programs) and switching windows among them
+	## [ProgramID]-ProgramName="" --> Descriptive name of the program shortcut being mapped
+	## [ProgramID]-CommandExe="" --> Path to the .exe file of the program
+	## [ProgramID]-CommandPath="" --> Path to the folder of the program
+	## [ProgramID]-CommandArgs= --> Not used... yet?
+	## [ProgramID]-RunAsAdmin="no" --> Pending to implement RunAsAdmin option
+
+	[ProgramID]-AhkExeName="ahk_exe notepad.exe"
+	[ProgramID]-AhkGroupName="NotepadInstances"
+	[ProgramID]-ProgramName="Notepad"
+	[ProgramID]-CommandExe="C:\Windows\system32\notepad.exe"
+	[ProgramID]-CommandPath="C:\Windows\system32\"
+	[ProgramID]-CommandArgs=""
+	## Pending to implement RunAsAdmin option
+	[ProgramID]-RunAsAdmin="no"
+
+	[ProgramID2]-AhkExeName=""
+	[ProgramID2]-AhkGroupName=""
+	[ProgramID2]-ProgramName=""
+	[ProgramID2]-CommandExe=""
+	[ProgramID2]-CommandPath=""
+	[ProgramID2]-CommandArgs=""
+	## Who wants to run Calc as admin anyways??
+	[ProgramID2]-RunAsAdmin="no"
+
+
+[ShowOrRunWebSite]
+	# Variables listed here will be used by the function ShowOrRunWebSite("WebSite") on the .ahk script
+	# Default variables for opening browser windows, tested on Chrome (32/64 bits)
+	# Similar to ShowOrRunProgram(), however it adds functionality to set different arguments the web browser
+	# Double quotes can be used, as AHK will parse them correctly to the cmd function that will run the command
+	## VARIABLES DESCRIPTION
+	### (Required) Browser .exe paths
+	#### [ID_HERE]-BrowserExe=""
+	#### [ID_HERE]-BrowserPath=""
+	#### Set up a browser exe and path variables individually for each app, in case there's the need to open one with a different browser
+	#### Paths for Chrome (defaults)
+	#### (64 bits) [ID_HERE]-BrowserExe="C:\Program Files\Google\Chrome\Application\chrome.exe"
+	#### (64 bits) [ID_HERE]-BrowserPath="C:\Program Files\Google\Chrome\Application\"
+	#### (32 bits) [ID_HERE]-BrowserExe="C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
+	#### (32 bits) [ID_HERE]-BrowserPath="C:\Program Files (x86)\Google\Chrome\Application\"
+
+	### (Required) [ID_HERE]-AhkSearchWindowTitle="" --> AHK will search widows containing part of this title
+	### (Required) [ID_HERE]-AhkGroupName="" --> Matched or created windows will be grouped into this GroupName to alternate between them
+	### (Required) [ID_HERE]-SiteName="" --> Descriptive site name for the message prompts that will be displayed when invoking the AHK key shortcut
+	###																	 --> Not using it will show the word ERROR on promptss
+	### (1 is Required) List of arguments for browser
+	### You can test the command you need to use in cmd.exe and divide it among the argument slots [1-6]
+	#### [ID_HERE]-Arguments1=""
+	#### [ID_HERE]-Arguments2=""
+	#### [ID_HERE]-Arguments3=""
+	#### [ID_HERE]-Arguments4=""
+	#### [ID_HERE]-Arguments5=""
+	#### [ID_HERE]-Arguments6=""
+	#### [ID_HERE]-RunAsAdmin="" -->  Run as admin (pending to implement...)
+
+	#### Example variables settings for ARGUMENTS [1-6], see chrome documentation or browser you choose for proper syntax: 
+	#### Arguments will be concatenated as: 
+	#### Arg1+Arg2...+Arg6 
+	#### Take this into account when setting the variables as spaces may be needed in some of them to separate arguments while concatenating
+	
+	##### CHOOSE PROFILE DIRECTORY 
+	##### [ID_HERE]-Arguments1="--profile-directory="Default" "
+	 
+	##### OPEN URL IN NEW WINDOW 
+	##### [ID_HERE]-Arguments1="--new-window "https//www.google.com/""
+
+	##### OPEN URL WITH NO BROWSER URL NOR TOOLBARS (App-like)
+	##### [ID_HERE]-Arguments1="--profile-directory="Default" "
+	##### [ID_HERE]-Arguments2="--app="data:text/html,<html><body><script>var AppWidth=700; var AppHeight=700; window.moveTo(0,0); window.resizeTo( AppWidth,AppHeight);window.location='""
+	##### [ID_HERE]-Arguments3="https://www.google.com"
+	##### [ID_HERE]-Arguments4=""';</script></body></html>" "
+	
+	## Example to open www.google.com site: 
+	[ID_HERE]-BrowserExe="C:\Program Files\Google\Chrome\Application\chrome.exe"
+	[ID_HERE]-BrowserPath="C:\Program Files\Google\Chrome\Application\"
+	[ID_HERE]-AhkSearchWindowTitle="Digium Switchvox"
+	[ID_HERE]-AhkGroupName="SvoxQueueInstances"
+	[ID_HERE]-SiteName="Svox Queue Panel"
+	[ID_HERE]-Arguments1="--profile-directory="Default" "
+	[ID_HERE]-Arguments2="--new-window "https://www.google.com/""
+	[ID_HERE]-Arguments3=""
+	[ID_HERE]-Arguments4=""
+	[ID_HERE]-Arguments5=""
+	[ID_HERE]-Arguments6=""
+	[ID_HERE]-RunAsAdmin="no"
+	
