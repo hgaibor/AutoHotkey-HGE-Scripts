@@ -556,10 +556,15 @@ CreateOpenFolder(BaseFolderPath, LocationName, FolderOperation){
 						Run, explorer.exe "%FolderFullPath%"
 					}
 				}
+				else if (FolderOperation == "Open_Create")
+				{
+					; Since already asked for the folder name makes sense to open automatically 
+					Run, explorer.exe "%FolderFullPath%"
+				}
 			}
 
 		}
-		else 
+		else if (FolderOperation == "Open_Create")
 		{
 			; Message box options:
 			; Yes/No	--> 4 
