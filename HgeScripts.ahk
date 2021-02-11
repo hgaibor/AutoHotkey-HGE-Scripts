@@ -6,9 +6,9 @@
 ; *
 ; * History:
 ; *		
-;	*		2021-02-10	 Added more functionalities and multiple parameter-based calls 
-;	*		2021-02-05	 Added .ini file processing for ease of management and sharing 
 ; *		2021-02-01	 Refactored code for reuse optimization
+;	*		2021-02-05	 Added .ini file processing for ease of management and sharing 
+;	*		2021-02-10	 Added more functionalities and multiple parameter-based calls 
 ; *
 ; ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** *****
 
