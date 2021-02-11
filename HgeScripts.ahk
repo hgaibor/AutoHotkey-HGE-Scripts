@@ -91,6 +91,7 @@ if not (A_IsAdmin or RegExMatch(full_command_line, " /restart(?!\S)"))
 	+#w::ShowOrRunWebSite("WebSvoxPhone")
 	+#q::ShowOrRunWebSite("WebSvoxQ")
 	+#s::ShowOrRunWebSite("WebSlack")
+	+#m::ShowOrRunWebSite("SngMeet")
 	;+#s::ShowOrRunProgram("SlackDesktop")
 	
 	^#s::ShowOrRunProgram("St3")
