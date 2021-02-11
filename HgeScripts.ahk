@@ -4,6 +4,7 @@
 ; *	Date: 2019-Jan-25
 ; * License: GNU/GPL3+
 ; *
+; * Latest version: https://gist.github.com/hgaibor/ced4f817e229f441ae95b75314b9a5be
 ; * History:
 ; *		
 ;	*		2021-02-10	 Added more functionalities and multiple parameter-based calls 
