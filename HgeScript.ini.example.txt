@@ -12,6 +12,10 @@
 	# BUT NOT TESTED
 	WinEnvName="[HgePC]: "
 
+	# Run script as admin user.- This is needed for the VPN add route functions to work
+	# however if you do not want to use this function you may set this option to no
+	# Added this toggle to fix an issue #020
+		RunAsAdmin="yes"
 
 [VPNSettings]
 	# For the moment, ClientIP and FQDN are not used from .ini file, 

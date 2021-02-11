@@ -26,19 +26,28 @@ if (IniFileSetting = "ERROR")
 	MsgBox, Error loading file, create an .ini file and make sure the name matches the .ahk file
 	ExitApp
 }
-
-; Validate the script has admin rights, as it is necessary for the route_add commands to work 
-full_command_line := DllCall("GetCommandLine", "str")
-if not (A_IsAdmin or RegExMatch(full_command_line, " /restart(?!\S)"))
+Global RunScriptAsAdmin
+IniRead, RunScriptAsAdmin, %IniSettingsFilePath%, GeneralSettings, RunScriptAsAdmin
+if (RunScriptAsAdmin = "ERROR") 
 {
-    try
-    {
-        if A_IsCompiled
-            Run *RunAs "%A_ScriptFullPath%" /restart
-        else
-            Run *RunAs "%A_AhkPath%" /restart "%A_ScriptFullPath%"
-    }
-    ExitApp
+	RunScriptAsAdmin:="no"
+}
+
+if (RunScriptAsAdmin = "yes") 
+{	
+	; Validate the script has admin rights, as it is necessary for the route_add commands to work 
+	full_command_line := DllCall("GetCommandLine", "str")
+	if not (A_IsAdmin or RegExMatch(full_command_line, " /restart(?!\S)"))
+	{
+	    try
+	    {
+	        if A_IsCompiled
+	            Run *RunAs "%A_ScriptFullPath%" /restart
+	        else
+	            Run *RunAs "%A_AhkPath%" /restart "%A_ScriptFullPath%"
+	    }
+	    ExitApp
+	}
 }
 
 
@@ -543,6 +552,7 @@ CreateOpenFolder(BaseFolderPath, LocationName, FolderOperation){
 					{
 						; Work-around not to run tasks as administrator since the Script itself needs to be run like that for other tasks 
 						; RunWithNoElevation("explorer.exe",FolderFullPath, A_WinDir)
+						; Run, explorer.exe "%FolderFullPath%"
 						Run, explorer.exe "%FolderFullPath%"
 					}
 				}
