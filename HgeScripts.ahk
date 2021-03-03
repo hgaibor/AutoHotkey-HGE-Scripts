@@ -33,10 +33,12 @@ if (RunScriptAsAdmin = "ERROR")
 	RunScriptAsAdmin:="no"
 }
 
+; Get full path for script
+full_command_line := DllCall("GetCommandLine", "str")
+
 if (RunScriptAsAdmin = "yes") 
 {	
 	; Validate the script has admin rights, as it is necessary for the route_add commands to work 
-	full_command_line := DllCall("GetCommandLine", "str")
 	if not (A_IsAdmin or RegExMatch(full_command_line, " /restart(?!\S)"))
 	{
 	    try
@@ -98,7 +100,8 @@ if (RunScriptAsAdmin = "yes")
 	; ^!r::Reload  ; Assign Ctrl-Alt-R as a hotkey to restart the script.
 	>+#r::Reload  ; Assign Shift-Windows-R as a hotkey to restart the script.
 	+#c::AddIPtoRoute()
-	+#w::ShowOrRunWebSite("WebSvoxPhone")
+	; +#w::ShowOrRunWebSite("WebSvoxPhone")
+	+#w::ShowOrRunWebSite("WS")
 	+#q::ShowOrRunWebSite("WebSvoxQ")
 	+#s::ShowOrRunWebSite("WebSlack")
 	+#m::ShowOrRunWebSite("SngMeet")
@@ -193,9 +196,9 @@ ShowOrRunProgram(ProgramNameId){
 	; MsgBox, CommandArgs--> %CommandArgs% ; [HGE] (DEBUG) Uncomment_for_tests
 	; MsgBox, RunAsAdmin--> %RunAsAdmin% ; [HGE] (DEBUG) Uncomment_for_tests
 
+	SetTitleMatchMode, 2
 	if WinExist(AhkExeName)
 	{   
-		SetTitleMatchMode, 2
 		; Multi-window approach
 		GroupAdd, %AhkGroupName%, %AhkExeName%
 		GroupActivate %AhkGroupName%
@@ -206,7 +209,18 @@ ShowOrRunProgram(ProgramNameId){
 		IfMsgBox Yes
 		{
 			; Work-around not to run tasks as administrator since the Script itself needs to be run like that for other tasks 
-			RunWithNoElevation(CommandExe,CommandArgs, CommandPath)
+			; WARNING: RunWithNoElevation() may trigger alerts on some Antivirus software flagging it as:
+			; 	- Trojan.Multi.GenAutorunTask.b
+			; 	- PDM:Trojan.Win32.GenAutorunSchedulerTaskRun.b
+			; This is due to the function using svchost.exe to "program" the task to start the desired application or process.
+			if (RunScriptAsAdmin = "yes") 
+			{	
+				RunWithNoElevation(CommandExe,CommandArgs, CommandPath)
+			}
+			else
+			{
+				Run %CommandExe% %CommandArgs%
+			}
 		}
 	}
 }
@@ -246,9 +260,9 @@ ShowOrRunWebSite(WebSiteNameId){
 		; Pending to implement
 		; IniRead, RunAsAdmin, %IniSettingsFilePath%, ShowOrRunWebSite, %ProgramNameId%-RunAsAdmin
 
+		SetTitleMatchMode, 2
 		if WinExist(AhkSearchWindowTitle)
 		{   
-			SetTitleMatchMode, 2
 			; Multi-window approach
 			GroupAdd, %AhkGroupName%, %AhkSearchWindowTitle%
 			GroupActivate %AhkGroupName%
@@ -262,7 +276,18 @@ ShowOrRunWebSite(WebSiteNameId){
 				BrowserArgs := Arguments1 . Arguments2 . Arguments3 . Arguments4 . Arguments5 . Arguments6
 				
 				; Work-around not to run tasks as administrator since the Script itself needs to be run like that for other tasks 
-				RunWithNoElevation(BrowserExe,BrowserArgs, BrowserPath)
+				; WARNING: RunWithNoElevation() may trigger alerts on some Antivirus software flagging it as:
+				; 	- Trojan.Multi.GenAutorunTask.b
+				; 	- PDM:Trojan.Win32.GenAutorunSchedulerTaskRun.b
+				; This is due to the function using svchost.exe to "program" the task to start the desired application or process.
+				if (RunScriptAsAdmin = "yes") 
+				{	
+					RunWithNoElevation(BrowserExe,BrowserArgs, BrowserPath)
+				}
+				else
+				{
+						Run %BrowserExe% %BrowserArgs%
+				}
 			}
 		}
 }
@@ -538,7 +563,7 @@ CreateOpenFolder(BaseFolderPath, LocationName, FolderOperation){
 			
 			; Copy text to Clipboard
 			clipboard = %FolderFullPath%
-			IfWinExist, %FolderName%
+			If WinExist(FolderName)
 			{
 				; MsgBox, Window exists
 				WinActivate, %FolderName%
@@ -551,6 +576,10 @@ CreateOpenFolder(BaseFolderPath, LocationName, FolderOperation){
 					IfMsgBox Yes
 					{
 						; Work-around not to run tasks as administrator since the Script itself needs to be run like that for other tasks 
+						; WARNING: RunWithNoElevation() may trigger alerts on some Antivirus software flagging it as:
+						; 	- Trojan.Multi.GenAutorunTask.b
+						; 	- PDM:Trojan.Win32.GenAutorunSchedulerTaskRun.b
+						; This is due to the function using svchost.exe to "program" the task to start the desired application or process.
 						; RunWithNoElevation("explorer.exe",FolderFullPath, A_WinDir)
 						; Run, explorer.exe "%FolderFullPath%"
 						Run, explorer.exe "%FolderFullPath%"
