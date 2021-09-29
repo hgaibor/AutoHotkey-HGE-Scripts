@@ -3,7 +3,9 @@
 Created by: Hugo Gaibor
 Date: 2019-Jan-25
 License: GNU/GPL3+
-Github: https://gist.github.com/hgaibor/ced4f817e229f441ae95b75314b9a5be
+Github: https://github.com/hgaibor/AutoHotkey-HGE-Scripts
+
+Check https://www.autohotkey.com/ for more documentation
 
 ## Description 
 This script will allow you to improve your daily tasks by assigning custom key mappings to common tasks like: 
@@ -18,6 +20,7 @@ This script will allow you to improve your daily tasks by assigning custom key m
 
 ## History:
  
+ - 2021-09-29   Imported Gist from https://gist.github.com/hgaibor/ced4f817e229f441ae95b75314b9a5be to a repo for ease of tracking and adding more features(?)
  - 2021-02-10   Added more features and multiple parameter-based calls to functions
  - 2021-02-05   Added .ini file processing for ease of management and sharing 
  - 2021-02-01   Refactored code for reuse optimization
