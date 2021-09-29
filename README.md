@@ -5,7 +5,7 @@ Date: 2019-Jan-25
 License: GNU/GPL3+
 Github: https://github.com/hgaibor/AutoHotkey-HGE-Scripts
 
-Check https://www.autohotkey.com/ for more documentation
+Check https://www.autohotkey.com/ for more documentation.
 
 ## Description 
 This script will allow you to improve your daily tasks by assigning custom key mappings to common tasks like: 
