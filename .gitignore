@@ -1,5 +1,7 @@
 # Specify filepatterns you want git to ignore.
 *.ini
+*.ahk_hotkeys
+.local/
 # Compiled source #
 ###################
 *.com
