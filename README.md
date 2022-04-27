@@ -1,5 +1,5 @@
 
-# Auto Hotkey misc applications command tweaks 
+# Auto Hotkey misc applications command tweaks
 Created by: Hugo Gaibor
 Date: 2019-Jan-25
 License: GNU/GPL3+
@@ -7,7 +7,7 @@ Github: https://github.com/hgaibor/AutoHotkey-HGE-Scripts
 
 Check https://www.autohotkey.com/ for more documentation.
 
-## Description 
+## Description
 This script will allow you to improve your daily tasks by assigning custom key mappings to common tasks like: 
 - Launch programs or web pages, assign as many programs or sites as keys on your keyboard, by mapping them into the .ini file 
 - Quick jump existing windows of programs or and many more! Check the example list on the 
@@ -16,14 +16,31 @@ This script will allow you to improve your daily tasks by assigning custom key m
 - Toggle always on top for program windows
 - Send clipboard entry as independent key strokes (useful for VM connections where copy/paste is not an option)
 - Custom mouse buttons 
-- Custom key shortcut for KiTTY 
+- Custom key shortcuts for KiTTY 
+- Check `HgeScript.ini.example.txt` for usage information and function descriptions
+- Check `HgeScripts.ahk_hotkeys.example.txt` for some possible shortcuts that can be created using this tool
 
 ## History:
  
- - 2021-09-29   Imported Gist from https://gist.github.com/hgaibor/ced4f817e229f441ae95b75314b9a5be to a repo for ease of tracking and adding more features(?)
- - 2021-02-10   Added more features and multiple parameter-based calls to functions
- - 2021-02-05   Added .ini file processing for ease of management and sharing 
- - 2021-02-01   Refactored code for reuse optimization
+ ### 2022-04-27
+ - NEW: Created additional shortcuts for Kitty and new Putty-based accept prompt for SSH sessions
+ - New: Refactored code to separate hotkeys into an `.ahk_hotkeys` file, so it is easier to separate shorcuts from essential code, check the `HgeScripts.ahk_hotkeys.example.txt` for more details
+ - NEW: Created logic to reuse browser profiles, allowing easier URL description on `.ini` files
+ - NEW: `OpenWebSiteWithInput` function, allowing to open URLs with some variable input
+ - NEW: Defined N-based logic to allow more user inputs on above function as well as N-based arguments for browsers
+
+ ### 2021-09-29
+ - Imported Gist from https://gist.github.com/hgaibor/ced4f817e229f441ae95b75314b9a5be to a repo for ease of tracking and adding more features(?)
+
+ ### 2021-02-10
+ - Added more features and multiple parameter-based calls to functions
+
+ ### 2021-02-05
+ - Added .ini file processing for ease of management and sharing 
+
+ ### 2021-02-01
+ - Refactored code for reuse optimization
+
 
 ## Issues fixes
 This is just a number, I don't have the exact number of issues experienced during the creation of this script LOL, so keeping it as simple as possible here.. 

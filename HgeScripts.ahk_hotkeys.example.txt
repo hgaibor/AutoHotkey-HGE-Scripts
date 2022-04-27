@@ -1,0 +1,110 @@
+; After editing this file, rename it remove the .example.txt extension and leave it with .ahk_hotkeys as its extension
+; Despite the odd extension name, its basically an AHK script file, in order to allow to have several scripts running 
+; it was determined to use the base script name and it different extension
+
+; KEY special characters definition 
+	; # --> Windows key
+	; ^ --> Control key
+	; ! --> Alt key
+	; <!> --> AltGr key
+	; + --> Shift key
+	; < --> Left key pair (for control, shift and alt keys)
+	; > --> Right key pair (for control, shift and alt keys)
+	; SPACE --> Space bar key
+	; Numpad0 --> Number pad 0 
+
+; Hot Keys definition 
+	+#F1::show_hotkeys_list()  ; Hotkeys mapping information (please fill this manually to update your changes)
+		
+	; ^!r::Reload  ; Assign Ctrl-Alt-R as a hotkey to restart the script.
+	>+#r::Reload  ; Assign Right Shift-Windows-R as a hotkey to restart the script.
+	+#c::AddIPtoRoute()
+	+#w::ShowOrRunWebSite("WS") ; Web WhatsApp
+	+#s::ShowOrRunWebSite("WebSlack") ; Slack as an app
+	
+	^#s::ShowOrRunProgram("St3") ; SublimeText
+	+#a::ShowOrRunProgram("AIMP") 
+	+#z::ShowOrRunProgram("ZimWiki")
+	+#r::ShowOrRunProgram("WinRDP") ; Windows remote desktop
+	+#p::ShowOrRunProgram("Kitty") ; Putty alternative, very good
+	+#t::ShowOrRunProgram("TaskCoach")
+	>+#w::OpenWebSiteWithInput("WsSend") ; Ask for mobile number, then incorporate it to a web URL
+
+	
+	; +#p::FQDN_to_IP() ; [HGE] (DEBUG) Uncomment_for_tests 
+	#MButton:: ToggleAlwaysOnTop() ; [HGE] Browser forward
+
+; [HGE] Workaround for lack of additional mouse buttons and really crappy and expensive mice with them
+	^MButton:: Send {Browser_Back} ; [HGE] Browser forward
+	!MButton:: Send {Browser_Forward} ; [HGE] Browser forward
+	^!Insert::WrittenPaste()
+
+	;Slot implementation of CreateOpenFolder() function
+	+#e::ProcessFolderSlot()
+		
+
+#IfWinActive ahk_class PuTTYConfigBox  ; Putty Config window 
+	; Validation to enable  start button quick key press on Putty, very convenient 
+	; Putty Window info
+	; KiTTY Configuration
+	; ahk_class PuTTYConfigBox
+	; ahk_exe KITTY_~1.EXE
+	
+	; Control for start button
+	; ClassNN:	Button2
+	; Text:	Start
+	!s:: ; PuttyStartSession()  ; Start session rather than opening one 
+		ControlFocus , Button2
+		ControlSend , Button2, {space}
+		return
+	
+	!a:: ; Focus hostname or address button hotkey
+		ControlFocus , Edit1
+		return
+#IfWinActive
+
+#IfWinActive ahk_class #32770  ; Putty Accept server session cert window 
+	; Validation to enable accept button quick key press on Putty, very convenient 
+	; Putty Window info
+	; PuTTY Security Alert
+	; ahk_class #32770
+	; ahk_exe kitty_portable.exe
+
+	; Control for Accept button
+	; ClassNN:	Button2
+	; Text:	Accept
+	!a:: ; PuttyAcceptPrompt()  ; Accept session security prompt
+		ControlFocus , Button2
+		ControlSend , Button2, {space}
+		return
+#IfWinActive
+
+; Including general shorcuts information, update lines as needed
+show_hotkeys_list() {
+	MsgBox,64,%A_ScriptName% script hotkeys,
+		(LTrim Join
+			=== Currently set hotkeys === `n
+			%a_space% - Rshift+Win+r --> Reload this Script `n
+			%a_space% - shift+Win+w --> ShowOrRunWebSite("WS") `n
+			%a_space% - shift+Win+s --> ShowOrRunWebSite("WebSlack") `n
+			%a_space% - shift+Win+c --> AddIPtoRoute (Used for VPN environment) `n
+			%a_space% - Ctrl+Win+s --> ShowOrRunProgram("St3") `n
+			%a_space% - shift+Win+a --> ShowOrRunProgram("AIMP") `n
+			%a_space% - shift+Win+z --> ShowOrRunProgram("ZimWiki") `n
+			%a_space% - shift+Win+r --> ShowOrRunProgram("WinRDP") `n
+			%a_space% - shift+Win+p --> ShowOrRunProgram("Kitty") `n
+			%a_space% - Lshift+Win+w --> OpenWebSiteWithInput("WsSend") `n
+			%a_space% - shift+Win+t --> ShowOrRunProgram("TaskCoach") `n
+			%a_space% - Win+MouseMidBtn:: ToggleAlwaysOnTop() `n
+			%a_space% - Ctrl+MouseMidBtn --> Send "Browser_Back" `n
+			%a_space% - Alt+MouseMidBtn --> Send "Browser_Forward" `n
+			%a_space% - Ctrl+Alt+Insert --> Write clipboard as key presses `n
+			%a_space% - shift+Win+e --> Show/Open folder slot (1-9+0), press "e" for list of slots `n
+			`n
+			=== In App hotkeys === `n
+			%a_space% - Alt+s --> Start Kitty loaded session `n
+			%a_space% - Alt+a --> Focus Kitty host address bar `n
+			%a_space% - Alt+a --> Accept Kitty host session certificate `n
+
+		)
+}

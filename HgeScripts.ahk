@@ -4,15 +4,30 @@
 ; *	Date: 2019-Jan-25
 ; * License: GNU/GPL3+
 ; *
-; * Latest version: https://gist.github.com/hgaibor/ced4f817e229f441ae95b75314b9a5be
+; * Latest version: https://github.com/hgaibor/AutoHotkey-HGE-Scripts
 ; * History:
 ; *		
+; *		2021-09-29   Imported Gist to a repository for better tracking and updating, 
+; *								 this history won't be updated anymore..
 ;	*		2021-02-10	 Added more functionalities and multiple parameter-based calls 
 ;	*		2021-02-05	 Added .ini file processing for ease of management and sharing 
 ; *		2021-02-01	 Refactored code for reuse optimization
 ; *
 ; ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** *****
 
+#NoEnv
+#Persistent
+
+; Menu definition
+; Menu, Tray, Standard
+; Menu, Tray, Add, Item1
+Menu, Tray, Add, 
+Menu, Tray, Add, Show hotkeys, +#F1
+Menu, Tray, Add, Open ini File, open_ini_file
+; Menu, Tray, Add, Get custom ENV vars, get_current_env_vars
+; Menu, Tray, Add, Set custom ENV vars, set_env_vars
+
+; Menu, Tray, Add, This menu item is a submenu, :MySubmenu
 
 ; Attempt to load INI file, if not successful, exit app
 Global IniSettingsFileName
@@ -21,11 +36,34 @@ IniSettingsFileName :=SubStr(A_ScriptName, 1, InStr(A_ScriptName, ".", False, -1
 Global IniSettingsFilePath
 IniSettingsFilePath :=SubStr(A_ScriptFullPath, 1, InStr(A_ScriptFullPath, ".", False, -1) -1)".ini"
 
-if (IniFileSetting = "ERROR") 
+Global HotkeysFilePath
+; HotkeysFilePath :=SubStr(A_ScriptFullPath, 1, InStr(A_ScriptFullPath, ".", False, -1) -1)"_hotkeys"
+HotkeysFilePath := A_ScriptFullPath . "_hotkeys"
+
+if !FileExist(IniSettingsFilePath)
 {
-	MsgBox, Error loading file, create an .ini file and make sure the name matches the .ahk file
+	MsgBox,16,ERROR: Script .ini settings not found,
+		(LTrim Join
+			Please make sure there is an file named %IniSettingsFileName% in the same folder as this .ahk file.`n
+			If file is not present get the example .ini file at:`n https://github.com/hgaibor/AutoHotkey-HGE-Scripts
+			`nPress CONTROL+C to copy this dialog text with the URL.
+			`nScript will exit now
+		)
 	ExitApp
 }
+
+if !FileExist(HotkeysFilePath)
+{
+	MsgBox,16,ERROR: Script .ahk_hotkeys file not found,
+		(LTrim Join
+			Please make sure there is an file named %A_ScriptName%_hotkeys in the same folder as this .ahk file.`n
+			If file is not present get the example .ini file at:`n https://github.com/hgaibor/AutoHotkey-HGE-Scripts
+			`nPress CONTROL+C to copy this dialog text with the URL.
+			`nScript will exit now
+		)
+	ExitApp
+}
+
 Global RunScriptAsAdmin
 IniRead, RunScriptAsAdmin, %IniSettingsFilePath%, GeneralSettings, RunScriptAsAdmin
 if (RunScriptAsAdmin = "ERROR") 
@@ -41,14 +79,14 @@ if (RunScriptAsAdmin = "yes")
 	; Validate the script has admin rights, as it is necessary for the route_add commands to work 
 	if not (A_IsAdmin or RegExMatch(full_command_line, " /restart(?!\S)"))
 	{
-	    try
-	    {
-	        if A_IsCompiled
-	            Run *RunAs "%A_ScriptFullPath%" /restart
-	        else
-	            Run *RunAs "%A_AhkPath%" /restart "%A_ScriptFullPath%"
-	    }
-	    ExitApp
+			try
+			{
+					if A_IsCompiled
+							Run *RunAs "%A_ScriptFullPath%" /restart
+					else
+							Run *RunAs "%A_AhkPath%" /restart "%A_ScriptFullPath%"
+			}
+			ExitApp
 	}
 }
 
@@ -61,6 +99,22 @@ if (RunScriptAsAdmin = "yes")
 	{
 		WinEnvName := ""
 	}
+
+	Global MaxBrowserArguments
+	IniRead, MaxBrowserArguments, %IniSettingsFilePath%, GeneralSettings, BrowsersProfiles-MaxBrowserArguments
+	; MsgBox, %MaxBrowserArguments% ; [HGE] (DEBUG) Uncomment_for_tests
+	If (MaxBrowserArguments == "ERROR")
+	{
+		MaxBrowserArguments := 10
+	}
+
+	Global MaxOpenWebSiteInputs
+	IniRead, MaxOpenWebSiteInputs, %IniSettingsFilePath%, GeneralSettings, OpenWebSiteWithInput-MaxOpenWebSiteInputs
+	If (MaxOpenWebSiteInputs == "ERROR")
+	{
+		MaxOpenWebSiteInputs := 10
+	}
+
 
 ; VPN config variables, used inside functions and stuff:
 ; VARIABLES FOR AddIPtoRoute()
@@ -81,64 +135,23 @@ if (RunScriptAsAdmin = "yes")
 	; MsgBox, %Gateway% ; [HGE] (DEBUG) Uncomment_for_tests
 
 ; General init message
-	MsgBox Running %A_ScriptName% Script as admin: %A_IsAdmin%`nEnvironment: %WinEnvName%`nScript Source: %full_command_line%
+	MsgBox,64,Running %A_ScriptName% script,
+		(LTrim Join
+			Run as admin: %A_IsAdmin%`n
+			Environment: %WinEnvName%`n
+			Script Source: `n%full_command_line%
+		)
+
+; Including Hotkeys shortcut on remote file for ease of code and git maintaining
+#Include %A_ScriptDir%
+#Include %A_ScriptName%_hotkeys 
+; #Include %HotkeysFileName% 
 
 
-; KEY special characters definition 
-	; # --> Windows key
-	; ^ --> Control key
-	; ! --> Alt key
-	; <!> --> AltGr key
-	; + --> Shift key
-	; < --> Left key pair (for control, shift and alt keys)
-	; > --> Right key pair (for control, shift and alt keys)
-	; SPACE --> Space bar key
-	; Numpad0 --> Number pad 0 
+open_ini_file:
+	run %IniSettingsFilePath%
+return 
 
-
-; Hot Keys definition 
-	; ^!r::Reload  ; Assign Ctrl-Alt-R as a hotkey to restart the script.
-	>+#r::Reload  ; Assign Shift-Windows-R as a hotkey to restart the script.
-	+#c::AddIPtoRoute()
-	; +#w::ShowOrRunWebSite("WebSvoxPhone")
-	+#w::ShowOrRunWebSite("WS")
-	+#q::ShowOrRunWebSite("WebSvoxQ")
-	+#s::ShowOrRunWebSite("WebSlack")
-	+#m::ShowOrRunWebSite("SngMeet")
-	;+#s::ShowOrRunProgram("SlackDesktop")
-	
-	^#s::ShowOrRunProgram("St3")
-	+#z::ShowOrRunProgram("ZimWiki")
-	+#r::ShowOrRunProgram("WinRDP")
-	+#k::ShowOrRunProgram("Kitty")
-	+#t::ShowOrRunProgram("TaskCoach")
-	
-	; +#p::FQDN_to_IP() ; [HGE] (DEBUG) Uncomment_for_tests 
-	#MButton:: ToggleAlwaysOnTop() ; [HGE] Browser forward
-
-; [HGE] Workaround for lack of additional mouse buttons and really crappy and expensive mice with them
-	^MButton:: Send {Browser_Back} ; [HGE] Browser forward
-	!MButton:: Send {Browser_Forward} ; [HGE] Browser forward
-	^!Insert::WrittenPaste()
-
-	;Slot implementation of CreateOpenFolder() function
-	+#e::ProcessFolderSlot()
-		
-#IfWinActive ahk_class PuTTYConfigBox  ; Putty Config window 
-	; Validation to enable  start button quick key press on Putty, very convenient 
-	; Putty Window info
-	; KiTTY Configuration
-	; ahk_class PuTTYConfigBox
-	; ahk_exe KITTY_~1.EXE
-	
-	; Control for start button
-	; ClassNN:	Button2
-	; Text:	Start
-	; Color:	C5F1FB (Red=C5 Green=F1 Blue=FB)
-	; 	x: 12	y: 436	w: 83	h: 23
-	; Client:	x: 9	y: 410	w: 83	h: 23
-	!s:: PuttyStartSession()  ; Start session rather than opening one 
-#IfWinActive
 
 ToggleAlwaysOnTop(){
 	MouseGetPos,,,AppWin,VarControl
@@ -147,14 +160,14 @@ ToggleAlwaysOnTop(){
 	WinSet,AlwaysOnTop,Toggle,ahk_id %AppWin%
 	If WinResult = 0
 	{
-	  WinActivate,ahk_id %AppWin%
-	  ToolTip, Always on top enabled
-	  SetTimer, RemoveToolTip, -500
+		WinActivate,ahk_id %AppWin%
+		ToolTip, Always on top enabled
+		SetTimer, RemoveToolTip, -500
 	}
 	Else
 	{
-	  ToolTip, Always on top disabled
-	  SetTimer, RemoveToolTip, -500
+		ToolTip, Always on top disabled
+		SetTimer, RemoveToolTip, -500
 	}
 
 	return
@@ -185,7 +198,7 @@ ShowOrRunProgram(ProgramNameId){
 		MsgBox, ERROR... Missing parameters for ShowOrRunProgram function check the "%IniSettingsFileName%" file
 		return 
 	}
-	; Pending to implement
+	; [PENDING]: to implement
 	; IniRead, RunAsAdmin, %IniSettingsFilePath%, ShowOrRunProgram, %ProgramNameId%-RunAsAdmin
 
 	; MsgBox, AhkExeName--> %AhkExeName% ; [HGE] (DEBUG) Uncomment_for_tests
@@ -257,7 +270,7 @@ ShowOrRunWebSite(WebSiteNameId){
 			MsgBox, ERROR... Missing parameters for ShowOrRunWebSite function check the "%IniSettingsFileName%" file
 			return 
 		}
-		; Pending to implement
+		; [PENDING]: implement Run as admin
 		; IniRead, RunAsAdmin, %IniSettingsFilePath%, ShowOrRunWebSite, %ProgramNameId%-RunAsAdmin
 
 		SetTitleMatchMode, 2
@@ -292,16 +305,259 @@ ShowOrRunWebSite(WebSiteNameId){
 		}
 }
 
+OpenWebSiteWithInput(WebSiteWithInputNameId){
+	IniRead, AhkSearchWindowTitle, %IniSettingsFilePath%, OpenWebSiteWithInput, %WebSiteWithInputNameId%-AhkSearchWindowTitle
+	IniRead, AhkGroupName, %IniSettingsFilePath%, OpenWebSiteWithInput, %WebSiteWithInputNameId%-AhkGroupName
+	IniRead, SiteName, %IniSettingsFilePath%, OpenWebSiteWithInput, %WebSiteWithInputNameId%-SiteName
+	IniRead, BaseUrl, %IniSettingsFilePath%, OpenWebSiteWithInput, %WebSiteWithInputNameId%-BaseUrl
+	IniRead, OpenWebSiteOperation, %IniSettingsFilePath%, OpenWebSiteWithInput, %WebSiteWithInputNameId%-OpenWebSiteOperation
+	
+	; Main URL to insert input parameters
+	IniRead, BaseUrl, %IniSettingsFilePath%, OpenWebSiteWithInput, %WebSiteWithInputNameId%-BaseUrl
+
+	ErrorCounter := 0
+	ErrorString := ""
+
+	; [BEGIN] Error variables validation and message implementation... IN PROGRESS
+		; [BEGIN] Error validation for both types of OpenWebSiteOperation
+			if (SiteName == "ERROR")
+			{
+				ErrorCounter += 1
+				ErrorString .= "- SiteName not defined on ini file `n"
+			}
+
+			if (BaseUrl == "ERROR")
+			{
+				ErrorCounter += 1
+				ErrorString .= "- BaseUrl not defined on ini file `n"
+			}
+
+			if (AhkSearchWindowTitle == "ERROR")
+			{
+				AhkSearchWindowTitle := "DO_NOT_SEARCH"
+			}
+
+			if (AhkGroupName == "ERROR")
+			{
+				AhkSearchWindowTitle := "DO_NOT_SEARCH"
+				AhkGroupName := "DO_NOT_GROUP"
+			}
+			
+			if (OpenWebSiteOperation == "ERROR")
+			{
+				ErrorCounter += 1
+				ErrorString .= "- OpenWebSiteOperation not defined on ini file `n"
+			}
+		; [END] Error validation for both types of OpenWebSiteOperation
+
+		if (OpenWebSiteOperation = "Open_Website")
+		{
+			; [BEGIN] Set browser profile in [OpenWebSiteWithInput] this will indicate fields to load from [BrowsersProfiles]
+				IniRead, BrowserProfile, %IniSettingsFilePath%, OpenWebSiteWithInput, %WebSiteWithInputNameId%-BrowserProfile
+				IniRead, OpenTarget, %IniSettingsFilePath%, OpenWebSiteWithInput, %WebSiteWithInputNameId%-OpenTarget
+			; [END] Set browser profile in [OpenWebSiteWithInput] this will indicate fields to load from [BrowsersProfiles]
+
+			; [BEGIN] Load web browser profile from [BrowsersProfiles], this is determined by particular profile under [OpenWebSiteWithInput]
+				IniRead, BrowserExe, %IniSettingsFilePath%, BrowsersProfiles, %BrowserProfile%-DefinedBrowserExe
+				IniRead, BrowserPath, %IniSettingsFilePath%, BrowsersProfiles, %BrowserProfile%-DefinedBrowserPath
+				IniRead, BrowserUserProfile, %IniSettingsFilePath%, BrowsersProfiles, %BrowserProfile%-DefinedBrowserUserProfile
+				IniRead, NewWindowArg, %IniSettingsFilePath%, BrowsersProfiles, %BrowserProfile%-DefinedBrowserNewWindowArg
+				IniRead, NewTabArg, %IniSettingsFilePath%, BrowsersProfiles, %BrowserProfile%-DefinedBrowserNewTabArg
+			; [END] Load web browser profile from [BrowsersProfiles], this is determined by particular profile under [OpenWebSiteWithInput]
+
+			; [BEGIN] Error validation for "Open_Website" OpenWebSiteOperation
+				if (NewWindowArg == "ERROR")
+				{
+					NewWindowArg := ""
+				}
+
+				if (NewTabArg == "ERROR")
+				{
+					NewTabArg := ""
+				}
+
+				if (BrowserProfile == "ERROR")
+				{
+					ErrorCounter += 1
+					ErrorString .= "- BrowserProfile not defined on [OpenWebSiteWithInput] section or on current WebSiteWithInputNameId at ini file `n"
+				}
+
+				if (OpenTarget == "ERROR")
+				{
+					ErrorCounter += 1
+					ErrorString .= "- OpenTarget not defined on [OpenWebSiteWithInput] section or on current WebSiteWithInputNameId at ini file `n"
+				}
+
+				if (BrowserExe == "ERROR")
+				{
+					ErrorCounter += 1
+					ErrorString .= "- BrowserExe not defined on [BrowsersProfiles] section at ini file `n"
+				}
+
+				if (BrowserUserProfile == "ERROR")
+				{
+					BrowserUserProfile := ""
+				}
+
+				if (BrowserPath == "ERROR")
+				{
+					ErrorCounter += 1
+					ErrorString .= "- BrowserPath not defined on [BrowsersProfiles] section at ini file `n"
+				}
+
+				if (NewWindowArg == "ERROR")
+				{
+					ErrorCounter += 1
+					ErrorString .= "- Browser NewWindowArg not defined on [BrowsersProfiles] section at ini file `n"
+				}
+
+				if (NewTabArg == "ERROR")
+				{
+					ErrorCounter += 1
+					ErrorString .= "- Browser NewTabArg not defined on [BrowsersProfiles] section at ini file `n"
+				}
+
+				if (Arguments1 == "ERROR")
+				{
+					ErrorCounter += 1
+					ErrorString .= "- Browser Arguments1 not defined, define at least 1 Argument on [BrowsersProfiles] section at ini file `n"
+				}
+			; [END] Error validation for "Open_Website" OpenWebSiteOperation
+
+		}
+
+		; [BEGIN] Error validation for "Copy_URL" OpenWebSiteOperation
+			; if (OpenWebSiteOperation = "Copy_URL")
+			; {
+
+			; }
+		; [END] Error validation for "Copy_URL" OpenWebSiteOperation
+
+		If ( ErrorCounter > 0 )
+		{
+			MsgBox, 48, %WinEnvName%Please check ini file, Function aborted, .ini file contains the following errors: `n%ErrorString%
+			return
+		}
+	; [END] Error variables validation and meesage implementation... IN PROGRESS
+
+	if (OpenWebSiteOperation = "Open_Website")
+	{
+		BrowserRawArgs := % BrowserRawArgs . BrowserUserProfile
+
+			Loop %MaxBrowserArguments%
+			{
+				IniRead, Arguments%a_index%, %IniSettingsFilePath%, BrowsersProfiles, %BrowserProfile%-DefinedBrowserArguments%a_index%
+				; MsgBox % Arguments%a_index% ; [HGE] (DEBUG) Uncomment_for_tests
+				if ((Arguments%a_index% == "ERROR") || (Arguments%a_index% == "")) 
+					break
+				
+				BrowserRawArgs := % BrowserRawArgs . Arguments%a_index%
+				; MsgBox % Arguments%a_index% ; [HGE] (DEBUG) Uncomment_for_tests
+			}
+			; MsgBox % BrowserRawArgs ; [HGE] (DEBUG) Uncomment_for_tests
+			; return  ; [HGE] (DEBUG) Uncomment_for_tests
+
+		; Set page to open in new tab or new window
+			if (OpenTarget == "New_Window")
+			{
+				BrowserRawArgs := % BrowserRawArgs . NewWindowArg
+			}
+			else if (OpenTarget == "New_Tab")
+			{
+				BrowserRawArgs := % BrowserRawArgs . NewTabArg
+			}
+
+	}
+
+		; Pending to implement
+		; IniRead, RunAsAdmin, %IniSettingsFilePath%, ShowOrRunWebSite, %ProgramNameId%-RunAsAdmin
+
+		; Adding optional DO NOT GROUP OR SEARCH existing windows
+		SetTitleMatchMode, 2
+		if ((WinExist(AhkSearchWindowTitle)) && (AhkSearchWindowTitle != "DO_NOT_SEARCH") )
+		{   
+			; Multi-window approach
+			GroupAdd, %AhkGroupName%, %AhkSearchWindowTitle%
+			GroupActivate %AhkGroupName%
+			Gosub, AskWebSiteWithInput
+		}
+		else
+		{	
+			if (AhkSearchWindowTitle = "DO_NOT_SEARCH")
+			{
+				Gosub, AskWebSiteWithInput
+			}
+			else
+			{
+				MsgBoxMessage := "No window with that title found, open new instance?"
+				MsgBox, 36, %WinEnvName%Open %SiteName%?, %MsgBoxMessage% 
+				IfMsgBox Yes
+				{
+					Gosub, AskWebSiteWithInput
+				}
+			}
+		}
+		; return before running this label below: AskWebSiteWithInput
+		return
+
+		AskWebSiteWithInput:
+			BrowserURL := BaseUrl
+			Loop %MaxOpenWebSiteInputs%
+			{
+				; This function will take arguments from ini file, sequentially starting from 1, 
+				;  until it finds no additional N argument or until 10 (this limit may be increased... but not feeling like it)
+				IniRead, NameInput%a_index%, %IniSettingsFilePath%, OpenWebSiteWithInput, %WebSiteWithInputNameId%-NameInput%a_index%
+				IniRead, RegExDeleteFromInput%a_index%, %IniSettingsFilePath%, OpenWebSiteWithInput, %WebSiteWithInputNameId%-RegExDeleteFromInput%a_index%
+				IniRead, RegExInsertInput%a_index%, %IniSettingsFilePath%, OpenWebSiteWithInput, %WebSiteWithInputNameId%-RegExInsertInput%a_index%
+				
+				if (NameInput%a_index% == "ERROR") 
+					break
+				
+				NameInput := % NameInput%a_index%
+				InputBox, UrlInput%a_index%, %WinEnvName%,Enter %NameInput% for %SiteName% URL
+				CleanUrlInput%a_index% := % RegExReplace(UrlInput%a_index%, RegExDeleteFromInput%a_index%) ; , CleanUrlInput%a_index%)
+				BrowserURL := RegExReplace(BrowserURL, RegExInsertInput%a_index%, CleanUrlInput%a_index%)
+			}
+
+			if (OpenWebSiteOperation = "Copy_URL")
+			{
+				clipboard = %BrowserURL%
+				MsgBox,64,%WinEnvName%, formatted URL copied to clipboard
+			}
+
+			if (OpenWebSiteOperation = "Open_Website")
+			{
+				; By default this will replace the placeholder {BASE_URL_REPLACE_HERE} at the ini file, make sure you put the same placeholder or modify the code if you prefer
+				BrowserArgs := RegExReplace(BrowserRawArgs, "i)\{BASE_URL_REPLACE_HERE\}", BrowserURL)
+
+				; Work-around not to run tasks as administrator since the Script itself needs to be run like that for other tasks 
+				; WARNING: RunWithNoElevation() may trigger alerts on some Antivirus software flagging it as:
+				; 	- Trojan.Multi.GenAutorunTask.b
+				; 	- PDM:Trojan.Win32.GenAutorunSchedulerTaskRun.b
+				; This is due to the function using svchost.exe to "program" the task to start the desired application or process.
+				if (RunScriptAsAdmin = "yes") 
+				{	
+					RunWithNoElevation(BrowserExe,BrowserArgs, BrowserPath)
+				}
+				else
+				{
+						Run %BrowserExe% %BrowserArgs%
+				}
+
+			}
+		; Label safe exit point: AskWebSiteWithInput
+		return
+}
 
 AddIPtoRoute() {
 	IniRead, VpnName, %IniSettingsFilePath%, VPNSettings, VpnName
 	InputBox, ClientServer, %WinEnvName%Enter the client's IP or FQDN, This will add the IP to the IP route for the %VpnName% 
 	if ErrorLevel
-	    ; MsgBox, CANCEL was pressed. ; [HGE] (DEBUG) Uncomment_for_tests 
-	    Return
+			; MsgBox, CANCEL was pressed. ; [HGE] (DEBUG) Uncomment_for_tests 
+			Return
 	else
-    {
-    	; MsgBox, You entered "%UserInput%"
+		{
+			; MsgBox, You entered "%UserInput%"
 			if (ValidateIP(Trim(ClientServer)))
 			{
 				; If it's and IP address, add it directly
@@ -325,7 +581,7 @@ AddIPtoRoute() {
 				MsgBox, 0, %WinEnvName%Invalid IP or FQDN, %PingResult%
 					
 			}
-    }
+		}
 }
 
 
@@ -435,25 +691,62 @@ FQDN_to_IP(ByRef FQDN) {
 
 ProcessFolderSlot(){
 	FolderSlot := 
-		Input, FolderSlot, "L1 T2", {Enter}, 1,2,3,4,5,6,7,8,9,0
+		Input, FolderSlot, "L1 T2", {Enter}, 1,2,3,4,5,6,7,8,9,0,E,e ;E and e will be used to list the folders currently mapped on ini file
 		if (ErrorLevel = "Max")
 		{
-		    MsgBox, %WinEnvName%Select a valid folder slot, only numbers [1-9]+0 can be entered, set the slots on "%IniSettingsFileName%" file
-		    return
+				MsgBox,,%WinEnvName%Select a valid folder slot,
+					(LTrim Join
+						Only numbers [1-9]+0 can be entered, set the slots on "%IniSettingsFileName%" file.`n
+						Or press 'e' for the list of available slots
+					)
+				return
 		}
 		if (ErrorLevel = "Timeout")
 		{
-		    MsgBox, %WinEnvName%Select a valid folder slot, [1-9]+0 slots can be set up upon the "%IniSettingsFileName%" file
-		    return
+				MsgBox,,%WinEnvName%Select a valid folder slot,
+					(LTrim Join
+						Slots [1-9]+0 can be set up upon the "%IniSettingsFileName%" file.`n
+						Or press 'e' for the list of available slots
+					)
+				return
 		}
 		if (ErrorLevel = "NewInput")
-		    return
+				return
 		If InStr(ErrorLevel, "EndKey:")
 		{
-		    MsgBox, %WinEnvName%Select a valid folder slot, only numbers [1-9]+0 can be entered, set the slots on "%IniSettingsFileName%" file
-		    return
+				MsgBox,,%WinEnvName%Select a valid folder slot,
+					(LTrim Join
+						Only numbers [1-9]+0 can be entered, set the slots on "%IniSettingsFileName%" file.`n
+						Or press 'e' for the list of available slots
+					)
+				return
 		}
 
+		if (FolderSlot == "E" || FolderSlot == "e"){
+			; MsgBox, You pressed %FolderSlot%
+			FolderSlotIndex := 
+			FolderSlotsDescription := "=== Currently set folder Slots === `n`n"
+			Loop, 10
+			{
+				FolderSlotIndex := A_Index
+				if (A_Index == 10)
+				{
+					FolderSlotIndex := 0 
+				}
+				IniRead, LocationName, %IniSettingsFilePath%, CreateOpenFolder, LocationName%FolderSlotIndex%
+				FolderSlotsDescription .= " - Slot " FolderSlotIndex ": " LocationName "`n"
+				; Sleep, 100
+			}
+			MsgBox,32,%WinEnvName%List of set up folder slots,
+				( ;LTrim Join
+					%FolderSlotsDescription%
+				)
+			
+			return
+		;	for window in ComObjCreate("Shell.Application").Windows
+		;	windows .= window.LocationName " :: " window.LocationURL "`n"
+		; MsgBox % windows
+		}
 
 		IniRead, BaseFolderPath, %IniSettingsFilePath%, CreateOpenFolder, BaseFolderPath%FolderSlot%
 		IniRead, LocationName, %IniSettingsFilePath%, CreateOpenFolder, LocationName%FolderSlot%
@@ -523,11 +816,11 @@ CreateOpenFolder(BaseFolderPath, LocationName, FolderOperation){
 	if ErrorLevel
 	{		
 		; MsgBox, "ErrorLevel due to cancel" ; [HGE] (DEBUG) Uncomment_for_tests
-    Return
+		Return
 	}
 
 	else
-    {
+		{
 		if ((Trim(FolderName) == "") && (FolderOperation <> "Open_Folder") )
 		{
 			; MsgBox, FOLDER NOT EMPTY ; [HGE] (DEBUG) Uncomment_for_tests
@@ -607,17 +900,15 @@ CreateOpenFolder(BaseFolderPath, LocationName, FolderOperation){
 				clipboard = %FolderFullPath%
 			}
 			; else
-			    ; MsgBox Nope
+					; MsgBox Nope
 		}
-    }
+		}
 }
 
 
-PuttyStartSession(){
-	; MsgBox, Putty window 
-	ControlFocus , Button2
-	ControlSend , Button2, {space}
-}
+
+
+
 
 
 RunWithNoElevation(Target, Arguments, WorkingDirectory){

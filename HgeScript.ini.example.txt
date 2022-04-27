@@ -15,7 +15,11 @@
 	# Run script as admin user.- This is needed for the VPN add route functions to work
 	# however if you do not want to use this function you may set this option to no
 	# Added this toggle to fix an issue #020
-		RunAsAdmin="yes"
+		RunAsAdmin="no"
+
+	#	Use these variable to increase the amount of arguments for N-based loops, not really needed to add more than 10 though
+		BrowsersProfiles-MaxBrowserArguments="10"
+		OpenWebSiteWithInput-MaxOpenWebSiteInputs="10"
 
 [VPNSettings]
 	# For the moment, ClientIP and FQDN are not used from .ini file, 
@@ -27,6 +31,64 @@
 	Gateway="10.0.0.0"
 	# Descriptive name for the VPN (current script accepts single VPN declaration)
 	VpnName="Super Secret VPN"
+
+[BrowsersProfiles]
+	# New section to define browsers profiles to reduce repetitive code, also common used arguments are saved on specific variables 
+	# VARIABLES DESCRIPTION
+	# ======================
+	## BROWSER EXECUTABLE VARIABLES
+	## ----------------------
+	### (REQUIRED) Browser .exe and path
+	# 	[ID_HERE]-BrowserExe=""
+	# 	[ID_HERE]-BrowserPath=""
+	# 		Paths for Chrome (defaults)
+	# 		(64 bits) [ID_HERE]-BrowserExe="C:\Program Files\Google\Chrome\Application\chrome.exe"
+	# 		(64 bits) [ID_HERE]-BrowserPath="C:\Program Files\Google\Chrome\Application\"
+	# 		(32 bits) [ID_HERE]-BrowserExe="C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
+	# 		(32 bits) [ID_HERE]-BrowserPath="C:\Program Files (x86)\Google\Chrome\Application\"
+	## BROWSER ARGUMENT VARIABLES
+	## ----------------------
+	#	 List of arguments for browser. See your browser documentation for proper syntax:
+	#	 Double quotes can be used, as AHK will remove the first quotes on each side when parsing the ini file to the cmd function that will run the command
+	#	 Arguments will be concatenated with no spaces, as: `Arg1+Arg2...+ArgN`
+	#	 Take this into account when setting the variables as spaces may be needed in some of them to separate arguments while concatenating
+	#	 
+	#	 NEW: As an enhancement to individual browser settings on previous [ShowOrRunWebSite] function, this will allow N arguments to be declared, default is 10 which is good for most users. 
+	#	 NEW: defined browser will allow to replace the URL using a placeholder, that will make it easier to define and separate arguments from the base URL. At least Argument1 will be required
+	#				Argument1 will be the URL placeholder that will be inserted on the complete command line execution string
+	#				You can test the command you need to use in cmd.exe and divide it among the argument slots you need
+	#	 [ID_HERE]-Arguments1=""{BASE_URL_REPLACE_HERE}" "
+	#	 [ID_HERE]-Arguments2=""
+	#	 .
+	#	 [ID_HERE]-ArgumentsN=""
+	#	 [ID_HERE]-Arguments10=""
+	#	 [ID_HERE]-RunAsAdmin="" -->  Run as admin (pending to implement...)
+
+	## COMMON USAGE ARGUMENTS 
+	## ----------------------
+	#	 DefinedBrowserUserProfile: Enter the browser profile directory if you have multiple user profiles that require launching specific websites
+	#		Note: This won't get validation as some browsers can allow no profile argument to be defined, however check your usage scenario to confirm if it's needed.
+	#	 [ID_HERE]-DefinedBrowserUserProfile="--profile-directory="Default" "
+	#	 
+	#	 DefinedBrowserNewWindowArg: Browser-specific argument to open a new window, varies between browsers so enter it here to allow tweaking how you will open a specific website
+	#	 Chrome-specific
+	#	 [ID_HERE]-DefinedBrowserNewWindowArg="--new-window "
+	#	 
+	#	 DefinedBrowserNewTabArg: Similar to above, argument to open the URL on a new tab. 
+	#	 Chrome-specific, by default it attaches new page into last focused browser window
+	#	 [ID_HERE]-DefinedBrowserNewTabArg=""
+
+	Default-DefinedBrowserExe="C:\Program Files\Google\Chrome\Application\chrome.exe"
+	Default-DefinedBrowserPath="C:\Program Files\Google\Chrome\Application\"
+	Default-DefinedBrowserUserProfile="--profile-directory="Default" "
+	Default-DefinedBrowserNewWindowArg="--new-window "
+	Default-DefinedBrowserNewTabArg=""
+	Default-DefinedBrowserArguments1=""{BASE_URL_REPLACE_HERE}" "
+	Default-DefinedBrowserArguments2=""
+	Default-DefinedBrowserArguments3=""
+	Default-DefinedBrowserArguments4=""
+	Default-DefinedBrowserArguments5=""
+	Default-DefinedBrowserArguments6=""
 
 [CreateOpenFolder]
 	# Variables listed here will be used by the function ProcessFolderSlot()
@@ -99,7 +161,7 @@
 	# Variables listed here will be used by the function ShowOrRunWebSite("WebSite") on the .ahk script
 	# Default variables for opening browser windows, tested on Chrome (32/64 bits)
 	# Similar to ShowOrRunProgram(), however it adds functionality to set different arguments the web browser
-	# Double quotes can be used, as AHK will parse them correctly to the cmd function that will run the command
+	# Double quotes can be used, as AHK will remove the first quotes on each side when parsing the ini file to the cmd function that will run the command
 	## VARIABLES DESCRIPTION
 	### (Required) Browser .exe paths
 	#### [ID_HERE]-BrowserExe=""
@@ -141,7 +203,13 @@
 	##### [ID_HERE]-Arguments2="--app="data:text/html,<html><body><script>var AppWidth=700; var AppHeight=700; window.moveTo(0,0); window.resizeTo( AppWidth,AppHeight);window.location='""
 	##### [ID_HERE]-Arguments3="https://www.google.com"
 	##### [ID_HERE]-Arguments4=""';</script></body></html>" "
-	
+	####### UPDATE #######
+		## It seems this method to call --app that uses javascript to load the page causes some issue and the new window it never lauched. 
+	  ## NEW WORKING METHOD: ##
+		##### [ID_HERE]-Arguments1="--profile-directory="Default" "
+		##### [ID_HERE]-Arguments2="--app="https://app.website.com/client/" "
+
+
 	## Example to open www.google.com site: 
 	[ID_HERE]-BrowserExe="C:\Program Files\Google\Chrome\Application\chrome.exe"
 	[ID_HERE]-BrowserPath="C:\Program Files\Google\Chrome\Application\"
@@ -156,3 +224,46 @@
 	[ID_HERE]-Arguments6=""
 	[ID_HERE]-RunAsAdmin="no"
 	
+
+[OpenWebSiteWithInput]
+	MyWebsite-SiteName="MyWebsite item"
+	# To avoid duplicating browser launch command info, website open command will use one of the declared browser configs available at the '[Defined browsers]' section
+	MyWebsite-BrowserProfile="DefaultHge"
+
+	# Options are "New_Tab" and "New_Window", name is self explanatory,
+	# 	but it will use the new tab or window commands defined on '[Defined browsers]' as the command would not be the same for different browsers
+	MyWebsite-OpenTarget="New_Window"
+	# MyWebsite-OpenTarget="New_Tab"
+
+	# Use "DO_NOT_SEARCH" and "DO_NOT_GROUP" on these options to override searching and focus of current similar existing windows. 
+	# 	This is only valid if the WebSite page title contains a similar set of characters that can allow to search and group pages.
+	#		Also, this will only work if the selected tab with the page is the currently visible tab on a browser window.
+	MyWebsite-AhkSearchWindowTitle="DO_NOT_SEARCH"
+	MyWebsite-AhkGroupName="DO_NOT_GROUP"
+
+	# BaseUrl --> URL that will be opened, you can put up to 10 placeholders that will be replaced with the inputs requested
+	MyWebsite-BaseUrl="https://mycoolwebsite.com/index.php?/View/{REPLACE_INPUT1}"
+	# Available options are "Open_Website" and "Copy_URL"
+	MyWebsite-OpenWebSiteOperation="Open_Website"
+	# MyWebsite-OpenWebSiteOperation="Copy_URL"
+	# Enter up to 10 possible inputs, they need to be continous starting from 1, follow similar syntax: 
+		# NameInput1 --> Informational name to identify the input that will be requested on this website open command
+		# RegExDeleteFromInput1 --> Sanitize regex to remove unwanted characters from inputX, RegEx may start i) for case insensitive
+		# 													More info at: https://www.autohotkey.com/docs/misc/RegEx-QuickRef.htm#Options
+		# RegExInsertInput1  --> field from the "XXX-BaseUrl" field, where the entered input will be placed.
+		# 											 For practical purposes it's named {REPLACE_INPUTX} but you may use any placeholder, as long as it is not part of the URL
+		# 											 as long as it is not part of the URL and it has the same name here than on the URL
+	MyWebsite-NameInput1="Item ID"
+	MyWebsite-RegExDeleteFromInput1="i)[^\d]"
+	MyWebsite-RegExInsertInput1="i)\{REPLACE_INPUT1\}"
+
+
+	WsSend-SiteName="New WhatsApp message"
+	WsSend-BaseUrl="https://web.whatsapp.com/send?text&app_absent=1&phone={REPLACE_INPUT1}"
+	WsSend-AhkSearchWindowTitle="WhatsApp"
+	WsSend-AhkGroupName="WSInstances"
+	WsSend-OpenWebSiteOperation="Copy_URL"
+	WsSend-NameInput1="Phone number"
+	WsSend-RegExDeleteFromInput1="i)[^\d]|^0"
+	# WsSend-RegExDeleteFromInput1="i)[^\d]"
+	WsSend-RegExInsertInput1="i)\{REPLACE_INPUT1\}"
