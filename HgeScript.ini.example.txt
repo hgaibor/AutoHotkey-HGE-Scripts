@@ -1,83 +1,25 @@
-# Written for AHK V1, not tested on V2 but may work similarly
+# Refer to new file [USAGE-GUIDE.md] for full description on each of the sections, and documentation on how to set this script. 
+
+# This .ini file will contain a base set of options to tweak and fast start, once the USAGE-GUIDE is read. 
 # Comments begin with # character
 # DO NOT PUT COMMENTS AFTER VARIABLES AS IT WILL BE PARSED AS PART OF THE ELEMENT
-# Rename this file EXACTLY THE SAME as the .ahk script (without extension), setting it as .ini 
-# If there is no .ini file, AHK script will exit
-# Due to some functions called inside of this script, AHK will request to run as Admin
-# This may be toggle-enabled on the future, but for now is not implemented
-# Even if script runs as Admin user, programs lauched will be run without privilege escalation
+
 [GeneralSettings]
-	# Optional variable to identify current running instance
-	# In theory, you may be able to run more than one instance with different names
-	# BUT NOT TESTED
-	WinEnvName="[HgePC]: "
+	WinEnvName="[ExamplePC]: "
+	RunScriptAsAdmin="no"
+	BrowsersProfiles-MaxBrowserArguments="10"
+	OpenWebSiteWithInput-MaxOpenWebSiteInputs="10"
+	CreateOpenFolder_X-MaxFolderSlots=100
 
-	# Run script as admin user.- This is needed for the VPN add route functions to work
-	# however if you do not want to use this function you may set this option to no
-	# Added this toggle to fix an issue #020
-		RunAsAdmin="no"
-
-	#	Use these variable to increase the amount of arguments for N-based loops, not really needed to add more than 10 though
-		BrowsersProfiles-MaxBrowserArguments="10"
-		OpenWebSiteWithInput-MaxOpenWebSiteInputs="10"
-
+# Leaving this for information, although most users won't really need this function
 [VPNSettings]
-	# For the moment, ClientIP and FQDN are not used from .ini file, 
-	# FQDN is used to attempt to convert an URL into an IP by the FQDN_to_IP() function 
-	# AddIPtoRoute() function will use these variables to add the IP to the route of the VPN
 	ClientIP=""
 	FQDN=""
 	Mask="255.255.255.255"
 	Gateway="10.0.0.0"
-	# Descriptive name for the VPN (current script accepts single VPN declaration)
 	VpnName="Super Secret VPN"
 
 [BrowsersProfiles]
-	# New section to define browsers profiles to reduce repetitive code, also common used arguments are saved on specific variables 
-	# VARIABLES DESCRIPTION
-	# ======================
-	## BROWSER EXECUTABLE VARIABLES
-	## ----------------------
-	### (REQUIRED) Browser .exe and path
-	# 	[ID_HERE]-BrowserExe=""
-	# 	[ID_HERE]-BrowserPath=""
-	# 		Paths for Chrome (defaults)
-	# 		(64 bits) [ID_HERE]-BrowserExe="C:\Program Files\Google\Chrome\Application\chrome.exe"
-	# 		(64 bits) [ID_HERE]-BrowserPath="C:\Program Files\Google\Chrome\Application\"
-	# 		(32 bits) [ID_HERE]-BrowserExe="C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
-	# 		(32 bits) [ID_HERE]-BrowserPath="C:\Program Files (x86)\Google\Chrome\Application\"
-	## BROWSER ARGUMENT VARIABLES
-	## ----------------------
-	#	 List of arguments for browser. See your browser documentation for proper syntax:
-	#	 Double quotes can be used, as AHK will remove the first quotes on each side when parsing the ini file to the cmd function that will run the command
-	#	 Arguments will be concatenated with no spaces, as: `Arg1+Arg2...+ArgN`
-	#	 Take this into account when setting the variables as spaces may be needed in some of them to separate arguments while concatenating
-	#	 
-	#	 NEW: As an enhancement to individual browser settings on previous [ShowOrRunWebSite] function, this will allow N arguments to be declared, default is 10 which is good for most users. 
-	#	 NEW: defined browser will allow to replace the URL using a placeholder, that will make it easier to define and separate arguments from the base URL. At least Argument1 will be required
-	#				Argument1 will be the URL placeholder that will be inserted on the complete command line execution string
-	#				You can test the command you need to use in cmd.exe and divide it among the argument slots you need
-	#	 [ID_HERE]-Arguments1=""{BASE_URL_REPLACE_HERE}" "
-	#	 [ID_HERE]-Arguments2=""
-	#	 .
-	#	 [ID_HERE]-ArgumentsN=""
-	#	 [ID_HERE]-Arguments10=""
-	#	 [ID_HERE]-RunAsAdmin="" -->  Run as admin (pending to implement...)
-
-	## COMMON USAGE ARGUMENTS 
-	## ----------------------
-	#	 DefinedBrowserUserProfile: Enter the browser profile directory if you have multiple user profiles that require launching specific websites
-	#		Note: This won't get validation as some browsers can allow no profile argument to be defined, however check your usage scenario to confirm if it's needed.
-	#	 [ID_HERE]-DefinedBrowserUserProfile="--profile-directory="Default" "
-	#	 
-	#	 DefinedBrowserNewWindowArg: Browser-specific argument to open a new window, varies between browsers so enter it here to allow tweaking how you will open a specific website
-	#	 Chrome-specific
-	#	 [ID_HERE]-DefinedBrowserNewWindowArg="--new-window "
-	#	 
-	#	 DefinedBrowserNewTabArg: Similar to above, argument to open the URL on a new tab. 
-	#	 Chrome-specific, by default it attaches new page into last focused browser window
-	#	 [ID_HERE]-DefinedBrowserNewTabArg=""
-
 	Default-DefinedBrowserExe="C:\Program Files\Google\Chrome\Application\chrome.exe"
 	Default-DefinedBrowserPath="C:\Program Files\Google\Chrome\Application\"
 	Default-DefinedBrowserUserProfile="--profile-directory="Default" "
@@ -86,36 +28,49 @@
 	Default-DefinedBrowserArguments1=""{BASE_URL_REPLACE_HERE}" "
 	Default-DefinedBrowserArguments2=""
 	Default-DefinedBrowserArguments3=""
-	Default-DefinedBrowserArguments4=""
-	Default-DefinedBrowserArguments5=""
-	Default-DefinedBrowserArguments6=""
+
+	WebAsApp-DefinedBrowserExe="C:\Program Files\Google\Chrome\Application\chrome.exe"
+	WebAsApp-DefinedBrowserPath="C:\Program Files\Google\Chrome\Application\"
+	WebAsApp-DefinedBrowserUserProfile="--profile-directory="Default" "
+	WebAsApp-DefinedBrowserRunAsAdmin=""
+	WebAsApp-DefinedBrowserNewWindowArg=""
+	WebAsApp-DefinedBrowserNewTabArg="--app="{BASE_URL_REPLACE_HERE}" "
+	WebAsApp-DefinedBrowserArguments1=""
+	WebAsApp-DefinedBrowserArguments2=""
+	WebAsApp-DefinedBrowserArguments3=""
 
 [CreateOpenFolder]
-	# Variables listed here will be used by the function ProcessFolderSlot()
-	# ProcessFolderSlot() will wait for a single digit key press defining the slot to use
-	# Then it will call CreateOpenFolder() function to open predefined folder paths or create new folder inside of them: 
-	# Current function supports ten slots with a single digit [0-9]
-	# No need to create each of the 10 slots, however if set up one, make sure to fill the three required variables
-	
-	# VARIABLES DESCRIPTION
-	## BaseFolderPath1= --> Base folder path to open or create folders into (no need to end with back slash \)
-	## LocationName1= --> Descriptive name for location (not filling it will show the name as ERROR)
-	## FolderOperation1= --> Current supported operations are [Open_Create|Open_Folder]
-	### [Open_Create]: Will display an input box to enter the name of the folder to create, or open if already present
-	### 							 No validation against invalid characters is made, so BE WARNED
-	### [Open_Folder]: Will open the path defined on the current slot
-
-	BaseFolderPath1="C:\Users\MyDocuments"
+	BaseFolderPath1="C:\Users\ExampleUser\MyDocuments"
 	LocationName1="Documents"
 	FolderOperation1="Open_Create"
 
-	BaseFolderPath2="C:\Users\User1\Downloads"
+	BaseFolderPath2="C:\Users\ExampleUser\Downloads"
 	LocationName2="Downloads folder"
 	FolderOperation2="Open_Folder"
 
-	.
-	.
-	.
+	BaseFolderPath3="C:\Users\ExampleUser\OneDrive"
+	LocationName3="OneDrive"
+	FolderOperation3="Open_Folder"
+
+	BaseFolderPath4="C:\Users\ExampleUser\Downloads"
+	LocationName4="Downloads folder"
+	FolderOperation4="Open_Folder"
+
+	BaseFolderPath5=""
+	LocationName5=""
+	FolderOperation5=""
+
+	BaseFolderPath6=""
+	LocationName6=""
+	FolderOperation6=""
+
+	BaseFolderPath7=
+	LocationName7=
+	FolderOperation7=
+
+	BaseFolderPath8=
+	LocationName8=
+	FolderOperation8=
 
 	BaseFolderPath9=
 	LocationName9=
@@ -125,141 +80,93 @@
 	LocationName0=
 	FolderOperation0=
 
+
 [ShowOrRunProgram]
-	# Variables listed here will be used by the function ShowOrRunProgram("PogramID") on the .ahk script
-	# PogramID can be any string, remove the brackets and make it unique to be able to map as many programs 
-	# as you need to tie to key shortcuts
-	# VARIABLES DESCRIPTION
-	## [ProgramID]-AhkExeName="" --> Program identifier, refer to https://www.autohotkey.com/docs/misc/WinTitle.htm for furhter info
-	## [ProgramID]-AhkGroupName="" --> String name allowing to group program instances (can be different programs) and switching windows among them
-	## [ProgramID]-ProgramName="" --> Descriptive name of the program shortcut being mapped
-	## [ProgramID]-CommandExe="" --> Path to the .exe file of the program
-	## [ProgramID]-CommandPath="" --> Path to the folder of the program
-	## [ProgramID]-CommandArgs= --> Not used... yet?
-	## [ProgramID]-RunAsAdmin="no" --> Pending to implement RunAsAdmin option
+	AIMP-AhkExeName="ahk_exe AIMP.exe"
+	AIMP-AhkGroupName="AIMPInstances"
+	AIMP-ProgramName="AIMP"
+	AIMP-CommandExe="C:\Program Files\AIMP\App\AIMP\AIMP.exe"
+	AIMP-CommandPath="C:\Program Files\AIMP\App\AIMP"
+	AIMP-CommandArgs=
+	AIMP-RunAsAdmin="no"
 
-	[ProgramID]-AhkExeName="ahk_exe notepad.exe"
-	[ProgramID]-AhkGroupName="NotepadInstances"
-	[ProgramID]-ProgramName="Notepad"
-	[ProgramID]-CommandExe="C:\Windows\system32\notepad.exe"
-	[ProgramID]-CommandPath="C:\Windows\system32\"
-	[ProgramID]-CommandArgs=""
-	## Pending to implement RunAsAdmin option
-	[ProgramID]-RunAsAdmin="no"
+	St3-AhkExeName="ahk_exe sublime_text.exe"
+	St3-AhkGroupName="SublimeTextInstances"
+	St3-ProgramName="Sublime Text"
+	St3-CommandExe="C:\Program Files\Sublime Text\sublime_text.exe"
+	St3-CommandPath="C:\Program Files\Sublime Text\"
+	St3-CommandArgs=
+	St3-RunAsAdmin="no"
 
-	[ProgramID2]-AhkExeName=""
-	[ProgramID2]-AhkGroupName=""
-	[ProgramID2]-ProgramName=""
-	[ProgramID2]-CommandExe=""
-	[ProgramID2]-CommandPath=""
-	[ProgramID2]-CommandArgs=""
-	## Who wants to run Calc as admin anyways??
-	[ProgramID2]-RunAsAdmin="no"
+	ZimWiki-AhkExeName="ahk_exe zim.exe"
+	ZimWiki-AhkGroupName="ZimWikiInstances"
+	ZimWiki-ProgramName="Zim Wiki"
+	ZimWiki-CommandExe="C:\Program Files\Zim Desktop Wiki\zim.exe"
+	ZimWiki-CommandPath="C:\Program Files\Zim Desktop Wiki\"
+	ZimWiki-CommandArgs=""
+	ZimWiki-RunAsAdmin="no"
+
+	WinRDP-AhkExeName="ahk_exe mstsc.exe"
+	WinRDP-AhkGroupName="WinRDPInstances"
+	WinRDP-ProgramName="Remote Desktop"
+	WinRDP-CommandExe="C:\Windows\system32\mstsc.exe"
+	WinRDP-CommandPath="C:\Windows\system32\"
+	WinRDP-CommandArgs=
+	WinRDP-RunAsAdmin="no"
+
+	SlackDesktop-AhkExeName="ahk_exe slack.exe"
+	SlackDesktop-AhkGroupName="SlackInstances"
+	SlackDesktop-ProgramName="Slack Desktop App"
+	SlackDesktop-CommandExe="C:\Users\ExampleUser\AppData\Local\slack\slack.exe"
+	SlackDesktop-CommandPath="C:\Users\ExampleUser\AppData\Local\slack\"
+	SlackDesktop-CommandArgs=""
+	SlackDesktop-RunAsAdmin="no"
 
 
 [ShowOrRunWebSite]
-	# Variables listed here will be used by the function ShowOrRunWebSite("WebSite") on the .ahk script
-	# Default variables for opening browser windows, tested on Chrome (32/64 bits)
-	# Similar to ShowOrRunProgram(), however it adds functionality to set different arguments the web browser
-	# Double quotes can be used, as AHK will remove the first quotes on each side when parsing the ini file to the cmd function that will run the command
-	## VARIABLES DESCRIPTION
-	### (Required) Browser .exe paths
-	#### [ID_HERE]-BrowserExe=""
-	#### [ID_HERE]-BrowserPath=""
-	#### Set up a browser exe and path variables individually for each app, in case there's the need to open one with a different browser
-	#### Paths for Chrome (defaults)
-	#### (64 bits) [ID_HERE]-BrowserExe="C:\Program Files\Google\Chrome\Application\chrome.exe"
-	#### (64 bits) [ID_HERE]-BrowserPath="C:\Program Files\Google\Chrome\Application\"
-	#### (32 bits) [ID_HERE]-BrowserExe="C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
-	#### (32 bits) [ID_HERE]-BrowserPath="C:\Program Files (x86)\Google\Chrome\Application\"
-
-	### (Required) [ID_HERE]-AhkSearchWindowTitle="" --> AHK will search widows containing part of this title
-	### (Required) [ID_HERE]-AhkGroupName="" --> Matched or created windows will be grouped into this GroupName to alternate between them
-	### (Required) [ID_HERE]-SiteName="" --> Descriptive site name for the message prompts that will be displayed when invoking the AHK key shortcut
-	###																	 --> Not using it will show the word ERROR on promptss
-	### (1 is Required) List of arguments for browser
-	### You can test the command you need to use in cmd.exe and divide it among the argument slots [1-6]
-	#### [ID_HERE]-Arguments1=""
-	#### [ID_HERE]-Arguments2=""
-	#### [ID_HERE]-Arguments3=""
-	#### [ID_HERE]-Arguments4=""
-	#### [ID_HERE]-Arguments5=""
-	#### [ID_HERE]-Arguments6=""
-	#### [ID_HERE]-RunAsAdmin="" -->  Run as admin (pending to implement...)
-
-	#### Example variables settings for ARGUMENTS [1-6], see chrome documentation or browser you choose for proper syntax: 
-	#### Arguments will be concatenated as: 
-	#### Arg1+Arg2...+Arg6 
-	#### Take this into account when setting the variables as spaces may be needed in some of them to separate arguments while concatenating
+	WebSlack-BrowserExe="C:\Program Files\Google\Chrome\Application\chrome.exe"
+	WebSlack-BrowserPath="C:\Program Files\Google\Chrome\Application\"
+	WebSlack-AhkSearchWindowTitle="Slack |"
+	WebSlack-AhkGroupName="WebSlackInstances"
+	WebSlack-SiteName="Slack Web App"
+	WebSlack-Arguments1="--profile-directory="Default" "
+	WebSlack-Arguments2="--app="https://app.slack.com/client/" "
+	WebSlack-Arguments3=""
+	WebSlack-Arguments4=""
+	WebSlack-Arguments5=""
+	WebSlack-Arguments6=""
+	WebSlack-RunAsAdmin="no"
 	
-	##### CHOOSE PROFILE DIRECTORY 
-	##### [ID_HERE]-Arguments1="--profile-directory="Default" "
-	 
-	##### OPEN URL IN NEW WINDOW 
-	##### [ID_HERE]-Arguments1="--new-window "https//www.google.com/""
+	WS-BrowserExe="C:\Program Files\Google\Chrome\Application\chrome.exe"
+	WS-BrowserPath="C:\Program Files\Google\Chrome\Application\"
+	WS-AhkSearchWindowTitle="WhatsApp"
+	WS-AhkGroupName="WSInstances"
+	WS-SiteName="WhatsApp Web"
+	WS-Arguments1="--profile-directory="Default" "
+	WS-Arguments2="--new-window "https://web.whatsapp.com/""
+	WS-Arguments3=""
+	WS-Arguments4=""
+	WS-Arguments5=""
+	WS-Arguments6=""
+	WS-RunAsAdmin="no"
 
-	##### OPEN URL WITH NO BROWSER URL NOR TOOLBARS (App-like)
-	##### [ID_HERE]-Arguments1="--profile-directory="Default" "
-	##### [ID_HERE]-Arguments2="--app="data:text/html,<html><body><script>var AppWidth=700; var AppHeight=700; window.moveTo(0,0); window.resizeTo( AppWidth,AppHeight);window.location='""
-	##### [ID_HERE]-Arguments3="https://www.google.com"
-	##### [ID_HERE]-Arguments4=""';</script></body></html>" "
-	####### UPDATE #######
-		## It seems this method to call --app that uses javascript to load the page causes some issue and the new window it never lauched. 
-	  ## NEW WORKING METHOD: ##
-		##### [ID_HERE]-Arguments1="--profile-directory="Default" "
-		##### [ID_HERE]-Arguments2="--app="https://app.website.com/client/" "
+	SngMeet-BrowserExe="C:\Program Files\Google\Chrome\Application\chrome.exe"
+	SngMeet-BrowserPath="C:\Program Files\Google\Chrome\Application\"
+	SngMeet-AhkSearchWindowTitle="Sangoma Meet"
+	SngMeet-AhkGroupName="SMeetInstances"
+	SngMeet-SiteName="Sangoma Meet"
+	SngMeet-Arguments1="--profile-directory="Default" "
+	SngMeet-Arguments2="--new-window "https://meet.sangoma.com/""
+	SngMeet-Arguments3=""
+	SngMeet-Arguments4=""
+	SngMeet-Arguments5=""
+	SngMeet-Arguments6=""
+	SngMeet-RunAsAdmin="no"
 
-
-	## Example to open www.google.com site: 
-	[ID_HERE]-BrowserExe="C:\Program Files\Google\Chrome\Application\chrome.exe"
-	[ID_HERE]-BrowserPath="C:\Program Files\Google\Chrome\Application\"
-	[ID_HERE]-AhkSearchWindowTitle="Digium Switchvox"
-	[ID_HERE]-AhkGroupName="SvoxQueueInstances"
-	[ID_HERE]-SiteName="Svox Queue Panel"
-	[ID_HERE]-Arguments1="--profile-directory="Default" "
-	[ID_HERE]-Arguments2="--new-window "https://www.google.com/""
-	[ID_HERE]-Arguments3=""
-	[ID_HERE]-Arguments4=""
-	[ID_HERE]-Arguments5=""
-	[ID_HERE]-Arguments6=""
-	[ID_HERE]-RunAsAdmin="no"
-	
 
 [OpenWebSiteWithInput]
-	MyWebsite-SiteName="MyWebsite item"
-	# To avoid duplicating browser launch command info, website open command will use one of the declared browser configs available at the '[Defined browsers]' section
-	MyWebsite-BrowserProfile="DefaultHge"
-
-	# Options are "New_Tab" and "New_Window", name is self explanatory,
-	# 	but it will use the new tab or window commands defined on '[Defined browsers]' as the command would not be the same for different browsers
-	MyWebsite-OpenTarget="New_Window"
-	# MyWebsite-OpenTarget="New_Tab"
-
-	# Use "DO_NOT_SEARCH" and "DO_NOT_GROUP" on these options to override searching and focus of current similar existing windows. 
-	# 	This is only valid if the WebSite page title contains a similar set of characters that can allow to search and group pages.
-	#		Also, this will only work if the selected tab with the page is the currently visible tab on a browser window.
-	MyWebsite-AhkSearchWindowTitle="DO_NOT_SEARCH"
-	MyWebsite-AhkGroupName="DO_NOT_GROUP"
-
-	# BaseUrl --> URL that will be opened, you can put up to 10 placeholders that will be replaced with the inputs requested
-	MyWebsite-BaseUrl="https://mycoolwebsite.com/index.php?/View/{REPLACE_INPUT1}"
-	# Available options are "Open_Website" and "Copy_URL"
-	MyWebsite-OpenWebSiteOperation="Open_Website"
-	# MyWebsite-OpenWebSiteOperation="Copy_URL"
-	# Enter up to 10 possible inputs, they need to be continous starting from 1, follow similar syntax: 
-		# NameInput1 --> Informational name to identify the input that will be requested on this website open command
-		# RegExDeleteFromInput1 --> Sanitize regex to remove unwanted characters from inputX, RegEx may start i) for case insensitive
-		# 													More info at: https://www.autohotkey.com/docs/misc/RegEx-QuickRef.htm#Options
-		# RegExInsertInput1  --> field from the "XXX-BaseUrl" field, where the entered input will be placed.
-		# 											 For practical purposes it's named {REPLACE_INPUTX} but you may use any placeholder, as long as it is not part of the URL
-		# 											 as long as it is not part of the URL and it has the same name here than on the URL
-	MyWebsite-NameInput1="Item ID"
-	MyWebsite-RegExDeleteFromInput1="i)[^\d]"
-	MyWebsite-RegExInsertInput1="i)\{REPLACE_INPUT1\}"
-
-
 	WsSend-SiteName="New WhatsApp message"
-	WsSend-BaseUrl="https://web.whatsapp.com/send?text&app_absent=1&phone={REPLACE_INPUT1}"
+	WsSend-BaseUrl="https://web.whatsapp.com/send?text&app_absent=1&phone=593{REPLACE_INPUT1}"
 	WsSend-AhkSearchWindowTitle="WhatsApp"
 	WsSend-AhkGroupName="WSInstances"
 	WsSend-OpenWebSiteOperation="Copy_URL"
@@ -267,3 +174,28 @@
 	WsSend-RegExDeleteFromInput1="i)[^\d]|^0"
 	# WsSend-RegExDeleteFromInput1="i)[^\d]"
 	WsSend-RegExInsertInput1="i)\{REPLACE_INPUT1\}"
+
+
+[CreateOpenFolder_X]
+	# Folder slots for ProcessFolderSlot_X function
+	# Numeric _ID must be unique for each folderslot under this section
+	# USER FOLDERS (you can repeat same folder path with different Labels, see 22 and 25)
+	BaseFolderPath_21="C:\Users\ExampleUser\OneDrive"
+	LocationName_21="OneDrive"
+	FolderLabel_21="CLD"
+	FolderOperation_21="Open_Folder"
+
+	BaseFolderPath_22="C:\Users\ExampleUser\Downloads"
+	LocationName_22="Downloads folder"
+	FolderLabel_22="Downloads"
+	FolderOperation_22="Open_Folder"
+
+	BaseFolderPath_23="C:\Users\ExampleUser\OneDrive\Documents"
+	LocationName_23="Documents folder"
+	FolderLabel_23="Docs"
+	FolderOperation_23="Open_Folder"
+
+	BaseFolderPath_25="C:\Users\ExampleUser\Downloads"
+	LocationName_25="Downloads folder"
+	FolderLabel_25="DN"
+	FolderOperation_25="Open_Folder"

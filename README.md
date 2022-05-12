@@ -1,11 +1,12 @@
 
-# Auto Hotkey misc applications command tweaks
+# AutoHotkey misc applications command tweaks
 Created by: Hugo Gaibor
 Date: 2019-Jan-25
 License: GNU/GPL3+
 Github: https://github.com/hgaibor/AutoHotkey-HGE-Scripts
 
-Check https://www.autohotkey.com/ for more documentation.
+Check the [usage guide](USAGE-GUIDE.md) for detailed script usage documentation.
+Check https://www.autohotkey.com/ for AutoHotKey documentation.
 
 ## Description
 This script will allow you to improve your daily tasks by assigning custom key mappings to common tasks like: 
@@ -21,6 +22,11 @@ This script will allow you to improve your daily tasks by assigning custom key m
 - Check `HgeScripts.ahk_hotkeys.example.txt` for some possible shortcuts that can be created using this tool
 
 ## History:
+ 
+ ### 2022-05-12
+ - NEW: Created new implementation of ProcessFolderSlot() function: ProcessFolderSlot_X(). It will allow unlimited folder slots and the ability to call folder slots by short, quick to remember, user-defined labels. Folders for this function will be defined at the `[CreateOpenFolder_X] section`
+ - Refactored `HgeScript.ini.example.txt` to include just plain configuration, and created **USAGE-GUIDE.md** file to detail the information on how to set up each section for the script
+ - Code cleaning and minor corrections
  
  ### 2022-04-27
  - NEW: Created additional shortcuts for Kitty and new Putty-based accept prompt for SSH sessions
