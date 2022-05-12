@@ -3,6 +3,7 @@
 Created by: Hugo Gaibor
 Date: 2019-Jan-25
 License: GNU/GPL3+
+
 Github: https://github.com/hgaibor/AutoHotkey-HGE-Scripts
 
 Check the [usage guide](USAGE-GUIDE.md) for detailed script usage documentation.
