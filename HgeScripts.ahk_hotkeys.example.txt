@@ -1,6 +1,7 @@
-; After editing this file, rename it remove the .example.txt extension and leave it with .ahk_hotkeys as its extension
+; After editing this file, rename it remove the .example.txt extension and leave it with .ahk_hotkeys as its final extension
 ; Despite the odd extension name, its basically an AHK script file, in order to allow to have several scripts running 
-; it was determined to use the base script name and it different extension
+; The main code will look for a file that has the same base script name and add the "_hotkeys" extension
+; Written for AHK V1, not tested on V2 but may work similarly
 
 ; KEY special characters definition 
 	; # --> Windows key
@@ -14,11 +15,11 @@
 	; Numpad0 --> Number pad 0 
 
 ; Hot Keys definition 
-	+#F1::show_hotkeys_list()  ; Hotkeys mapping information (please fill this manually to update your changes)
+	+#F1::show_hotkeys_list()  ; Hotkeys mapping information (please fill this list manually below to reflect your changes)
 		
-	; ^!r::Reload  ; Assign Ctrl-Alt-R as a hotkey to restart the script.
-	>+#r::Reload  ; Assign Right Shift-Windows-R as a hotkey to restart the script.
-	+#c::AddIPtoRoute()
+	; ^!r::Reload  ; Assign Ctrl-Alt-R as a hotkey to reload the script.
+	>+#r::Reload  ; Assign Right Shift-Windows-R as a hotkey to reload the script.
+	+#c::AddIPtoRoute() ; This function will add the IP to use the VPN route, parameters defined at the [VPNSettings] section
 	+#w::ShowOrRunWebSite("WS") ; Web WhatsApp
 	+#s::ShowOrRunWebSite("WebSlack") ; Slack as an app
 	
@@ -29,22 +30,20 @@
 	+#p::ShowOrRunProgram("Kitty") ; Putty alternative, very good
 	+#t::ShowOrRunProgram("TaskCoach")
 	>+#w::OpenWebSiteWithInput("WsSend") ; Ask for mobile number, then incorporate it to a web URL
-
 	
-	; +#p::FQDN_to_IP() ; [HGE] (DEBUG) Uncomment_for_tests 
-	#MButton:: ToggleAlwaysOnTop() ; [HGE] Browser forward
+	#MButton:: ToggleAlwaysOnTop() ; Set an app to be always on top
 
 ; [HGE] Workaround for lack of additional mouse buttons and really crappy and expensive mice with them
-	^MButton:: Send {Browser_Back} ; [HGE] Browser forward
-	!MButton:: Send {Browser_Forward} ; [HGE] Browser forward
-	^!Insert::WrittenPaste()
+	^MButton:: Send {Browser_Back} ; [HGE] Send browser back
+	!MButton:: Send {Browser_Forward} ; [HGE] Send browser forward
+	^!Insert::WrittenPaste() ; Send clipboard contents as individual keystrokes, useful when you can't paste into browsers or remote consoles
 
 	;Slot implementation of CreateOpenFolder() function
-	+#e::ProcessFolderSlot()
-		
+	>+#e::ProcessFolderSlot() ; Legacy implementation of Folder slots
+	+#e::ProcessFolderSlot_X() ; NEW, Mega, unlimited folder slots implementation ^_^
 
-#IfWinActive ahk_class PuTTYConfigBox  ; Putty Config window 
-	; Validation to enable  start button quick key press on Putty, very convenient 
+#IfWinActive ahk_class PuTTYConfigBox  ; Shortcuts for Putty Config window 
+	; Validation to enable  start button quick key press on Putty
 	; Putty Window info
 	; KiTTY Configuration
 	; ahk_class PuTTYConfigBox
@@ -63,8 +62,8 @@
 		return
 #IfWinActive
 
-#IfWinActive ahk_class #32770  ; Putty Accept server session cert window 
-	; Validation to enable accept button quick key press on Putty, very convenient 
+#IfWinActive ahk_class #32770  ; Shortcuts for Putty Accept server session cert window 
+	; Validation to enable accept button quick key press on Putty
 	; Putty Window info
 	; PuTTY Security Alert
 	; ahk_class #32770
@@ -99,7 +98,8 @@ show_hotkeys_list() {
 			%a_space% - Ctrl+MouseMidBtn --> Send "Browser_Back" `n
 			%a_space% - Alt+MouseMidBtn --> Send "Browser_Forward" `n
 			%a_space% - Ctrl+Alt+Insert --> Write clipboard as key presses `n
-			%a_space% - shift+Win+e --> Show/Open folder slot (1-9+0), press "e" for list of slots `n
+			%a_space% - Rshift+Win+e --> Show/Open folder slot (1-9+0), press "e" for list of slots `n
+			%a_space% - shift+Win+e --> Show/Open folder X slot (unlimited), press "e + ENTER" for list of slots `n
 			`n
 			=== In App hotkeys === `n
 			%a_space% - Alt+s --> Start Kitty loaded session `n

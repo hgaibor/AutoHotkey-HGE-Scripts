@@ -115,6 +115,8 @@ if (RunScriptAsAdmin = "yes")
 		MaxOpenWebSiteInputs := 10
 	}
 
+	Global MaxFolderSlots
+	
 
 ; VPN config variables, used inside functions and stuff:
 ; VARIABLES FOR AddIPtoRoute()
@@ -178,7 +180,7 @@ ToggleAlwaysOnTop(){
 
 
 WrittenPaste(){
-	;Send clipboard contents as keystrokes, useful when you can't paste into browsers or remote consoles 
+	; Send clipboard contents as keystrokes, useful when you can't paste into browsers or remote consoles 
 	SendInput, {Raw}%Clipboard%
 }
 
@@ -318,7 +320,7 @@ OpenWebSiteWithInput(WebSiteWithInputNameId){
 	ErrorCounter := 0
 	ErrorString := ""
 
-	; [BEGIN] Error variables validation and message implementation... IN PROGRESS
+	; [BEGIN] Error variables validation and message implementation
 		; [BEGIN] Error validation for both types of OpenWebSiteOperation
 			if (SiteName == "ERROR")
 			{
@@ -426,19 +428,12 @@ OpenWebSiteWithInput(WebSiteWithInputNameId){
 
 		}
 
-		; [BEGIN] Error validation for "Copy_URL" OpenWebSiteOperation
-			; if (OpenWebSiteOperation = "Copy_URL")
-			; {
-
-			; }
-		; [END] Error validation for "Copy_URL" OpenWebSiteOperation
-
 		If ( ErrorCounter > 0 )
 		{
 			MsgBox, 48, %WinEnvName%Please check ini file, Function aborted, .ini file contains the following errors: `n%ErrorString%
 			return
 		}
-	; [END] Error variables validation and meesage implementation... IN PROGRESS
+	; [END] Error variables validation and message implementation
 
 	if (OpenWebSiteOperation = "Open_Website")
 	{
@@ -447,12 +442,10 @@ OpenWebSiteWithInput(WebSiteWithInputNameId){
 			Loop %MaxBrowserArguments%
 			{
 				IniRead, Arguments%a_index%, %IniSettingsFilePath%, BrowsersProfiles, %BrowserProfile%-DefinedBrowserArguments%a_index%
-				; MsgBox % Arguments%a_index% ; [HGE] (DEBUG) Uncomment_for_tests
 				if ((Arguments%a_index% == "ERROR") || (Arguments%a_index% == "")) 
 					break
 				
 				BrowserRawArgs := % BrowserRawArgs . Arguments%a_index%
-				; MsgBox % Arguments%a_index% ; [HGE] (DEBUG) Uncomment_for_tests
 			}
 			; MsgBox % BrowserRawArgs ; [HGE] (DEBUG) Uncomment_for_tests
 			; return  ; [HGE] (DEBUG) Uncomment_for_tests
@@ -505,7 +498,7 @@ OpenWebSiteWithInput(WebSiteWithInputNameId){
 			Loop %MaxOpenWebSiteInputs%
 			{
 				; This function will take arguments from ini file, sequentially starting from 1, 
-				;  until it finds no additional N argument or until 10 (this limit may be increased... but not feeling like it)
+				;  until it finds no continuous N argument or until %MaxOpenWebSiteInputs%
 				IniRead, NameInput%a_index%, %IniSettingsFilePath%, OpenWebSiteWithInput, %WebSiteWithInputNameId%-NameInput%a_index%
 				IniRead, RegExDeleteFromInput%a_index%, %IniSettingsFilePath%, OpenWebSiteWithInput, %WebSiteWithInputNameId%-RegExDeleteFromInput%a_index%
 				IniRead, RegExInsertInput%a_index%, %IniSettingsFilePath%, OpenWebSiteWithInput, %WebSiteWithInputNameId%-RegExInsertInput%a_index%
@@ -515,7 +508,7 @@ OpenWebSiteWithInput(WebSiteWithInputNameId){
 				
 				NameInput := % NameInput%a_index%
 				InputBox, UrlInput%a_index%, %WinEnvName%,Enter %NameInput% for %SiteName% URL
-				CleanUrlInput%a_index% := % RegExReplace(UrlInput%a_index%, RegExDeleteFromInput%a_index%) ; , CleanUrlInput%a_index%)
+				CleanUrlInput%a_index% := % RegExReplace(UrlInput%a_index%, RegExDeleteFromInput%a_index%)
 				BrowserURL := RegExReplace(BrowserURL, RegExInsertInput%a_index%, CleanUrlInput%a_index%)
 			}
 
@@ -560,7 +553,7 @@ AddIPtoRoute() {
 			; MsgBox, You entered "%UserInput%"
 			if (ValidateIP(Trim(ClientServer)))
 			{
-				; If it's and IP address, add it directly
+				; If it's an IP address, add it directly
 				ClientIP := ClientServer
 				RunAddCommand(ClientIP, Mask, Gateway)
 			}	
@@ -688,6 +681,203 @@ FQDN_to_IP(ByRef FQDN) {
 	}
 }
 
+global FolderSlotIH, FolderSlotSearchById := false
+
+FolderSlotIH_Char(ih, char){
+    InputFirstChar := SubStr(ih.input, 1,1)
+
+    if InputFirstChar is integer 
+    		FolderSlotSearchById := true
+  	else
+  		FolderSlotSearchById := false
+
+    if (GetKeyVK(char) = 27 )
+    {
+			ToolTip, % "ABORTED"
+			FolderSlotIH.Stop()
+    }
+    else if (FolderSlotSearchById) {
+    	ToolTip, % "FolderSlot ID: " ih.input
+    	ih.KeyOpt("{Space}", "E") 
+    }	
+    else {
+    	ToolTip, % "FolderSlot label: " ih.input
+    	ih.KeyOpt("{Space}", "-E") 
+    }
+}
+
+FolderSlotIH_KeyDown(ih, vk, sc){
+  if (vk = 8){ ; {Backspace}
+    FolderSlotIH_Char(ih, "")
+  }
+
+  else if (vk = 32){ ; {Space}
+		if (FolderSlotSearchById = true)
+		{
+			FolderSlotIH.Stop()
+		}
+	}
+
+	else if (vk = 27){ ; {Esc}
+		FolderSlotIH.Stop()
+	}
+
+  else if (vk = 9){ ; Tab
+  	FolderSlotIH.Stop()
+  }
+
+  return
+	RemoveFolderSlotIH_KeyDownToolTip:
+	ToolTip
+	return
+}
+
+FolderSlotIH_End(){
+	SetTimer, RemoveFolderSlotIH_EndToolTip, -500
+
+	return
+	RemoveFolderSlotIH_EndToolTip:
+	ToolTip
+	return
+}
+
+ProcessFolderSlot_X(){
+	FolderSlotLabelFound := false
+	IniRead, MaxFolderSlots, %IniSettingsFilePath%, GeneralSettings, CreateOpenFolder_X-MaxFolderSlots
+	If (MaxFolderSlots == "ERROR")
+	{
+		MaxFolderSlots := 20
+	}
+
+	FolderSlotCounter := 0
+	ToolTip, % "Type FolderSlot ID or label: "
+	FolderSlotSearchById := false
+
+	FolderSlotIH := InputHook("L30T20", "{Enter}{Tab}")
+	FolderSlotIH.OnChar := Func("FolderSlotIH_Char")
+	FolderSlotIH.OnKeyDown := Func("FolderSlotIH_KeyDown")
+	FolderSlotIH.OnEnd := Func("FolderSlotIH_End")
+	FolderSlotIH.KeyOpt("{Backspace}{esc}{space}{tab}", "N")
+	FolderSlotIH.Start()
+
+	ErrorLevel := FolderSlotIH.Wait()
+	if (ErrorLevel = "EndKey"){
+    ErrorLevel .= ":" FolderSlotIH.EndKey	
+    ToolTip ; Visual improvement to remove ToolTip before confirmation
+		FolderSlot := FolderSlotIH.Input
+	}
+
+  if (ErrorLevel = "Stopped"){
+		FolderSlot := ""
+		return
+  }
+
+  FolderSlot := Trim(FolderSlot)
+	FolderSlotIndex := 
+
+	if (FolderSlot = "e"){
+		FolderSlotsDescription := "=== Currently set folder Slots === `n`n"
+		Loop, %MaxFolderSlots%
+		{
+			FolderSlotIndex := A_Index
+			if (A_Index == MaxFolderSlots)
+			{
+				FolderSlotIndex := 0 
+			}
+			IniRead, FolderSlotLabel, %IniSettingsFilePath%, CreateOpenFolder_X, FolderLabel_%FolderSlotIndex%
+			IniRead, LocationName, %IniSettingsFilePath%, CreateOpenFolder_X, LocationName_%FolderSlotIndex%
+			IniRead, FolderSlotOperation, %IniSettingsFilePath%, CreateOpenFolder_X, FolderOperation_%FolderSlotIndex%
+
+			if (LocationName != "ERROR")
+			{
+				FolderSlotCounter += 1
+				FolderSlotsDescription .= " - Slot: [" FolderSlotIndex "] -- Label: [" FolderSlotLabel "]`n    Name: " LocationName " -- Operation: " FolderSlotOperation "`n"
+			}
+		}
+
+		FolderSlotsDescription .= "`nTotal folders: (" FolderSlotCounter ")"
+
+		if (FolderSlotCounter < 20)
+		{
+			MsgBox,32,%WinEnvName%List of set up folder slots, %FolderSlotsDescription%
+		}
+		else
+		{
+			MsgBox,32,%WinEnvName%,List of set up folder slots is too long full list was copied to clipboard
+				clipboard = % FolderSlotsDescription
+		}
+		
+		return
+
+	}
+
+	if (FolderSlotSearchById)
+	{
+		IniRead, BaseFolderPath, %IniSettingsFilePath%, CreateOpenFolder_X, BaseFolderPath_%FolderSlot%
+		IniRead, LocationName, %IniSettingsFilePath%, CreateOpenFolder_X, LocationName_%FolderSlot%
+		IniRead, FolderOperation, %IniSettingsFilePath%, CreateOpenFolder_X, FolderOperation_%FolderSlot%
+
+		Gosub, ProcessFolderSlot_X_ValidateData
+	}
+	else 
+	{
+		Loop, %MaxFolderSlots%
+		{
+			FolderSlotIndex := A_Index
+			if (A_Index == MaxFolderSlots)
+			{
+				FolderSlotIndex := 0 
+			}
+			IniRead, FolderSlotLabel, %IniSettingsFilePath%, CreateOpenFolder_X, FolderLabel_%FolderSlotIndex%
+
+			if (FolderSlotLabel = FolderSlot)
+			{
+				IniRead, BaseFolderPath, %IniSettingsFilePath%, CreateOpenFolder_X, BaseFolderPath_%FolderSlotIndex%
+				IniRead, LocationName, %IniSettingsFilePath%, CreateOpenFolder_X, LocationName_%FolderSlotIndex%
+				IniRead, FolderOperation, %IniSettingsFilePath%, CreateOpenFolder_X, FolderOperation_%FolderSlotIndex%
+
+				FolderSlotLabelFound := true
+
+				Gosub, ProcessFolderSlot_X_ValidateData
+				break
+			}
+		}
+
+		if (!FolderSlotLabelFound)
+		{
+			MsgBox, 48, %WinEnvName%Not found, Folder slot not found, please check spelling or enter 'e' to show list of all folder slots.
+		}
+
+	}
+	return
+	
+	ProcessFolderSlot_X_ValidateData:
+		If ((BaseFolderPath == "ERROR"))
+		{
+			MsgBox, ERROR... SLOT %FolderSlot% not found, check the "%IniSettingsFileName%" file under [CreateOpenFolder_X]
+			return 
+		}
+
+		If (BaseFolderPath == "")
+		{
+			MsgBox, SLOT %FolderSlot% is empty, set it on the "%IniSettingsFileName%" file
+			return
+		}
+
+		If (LocationName == "")
+		{
+			LocationName = %FolderSlot%
+		}
+
+		If (FolderOperation == "")
+		{
+			FolderOperation := "Open_Folder"
+		}
+		
+		CreateOpenFolder(BaseFolderPath, LocationName, FolderOperation)
+	; Label safe exit point: ProcessFolderSlot_X_ValidateData
+	return
+}
 
 ProcessFolderSlot(){
 	FolderSlot := 
@@ -836,7 +1026,7 @@ CreateOpenFolder(BaseFolderPath, LocationName, FolderOperation){
 		else if (FolderOperation == "Open_Create")
 		{
 			; MsgBox, OPEN CREATE FOLDER ; [HGE] (DEBUG) Uncomment_for_tests
-			FolderFullPath := BaseFolderPath FolderName
+			FolderFullPath := BaseFolderPath (Trim(FolderName))
 		}
 
 		else 
