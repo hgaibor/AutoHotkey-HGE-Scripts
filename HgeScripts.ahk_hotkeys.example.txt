@@ -29,7 +29,7 @@
 	+#r::ShowOrRunProgram("WinRDP") ; Windows remote desktop
 	+#p::ShowOrRunProgram("Kitty") ; Putty alternative, very good
 	+#t::ShowOrRunProgram("TaskCoach")
-	>+#w::OpenWebSiteWithInput("WsSend") ; Ask for mobile number, then incorporate it to a web URL
+	>+#w::ShowOpenWebSiteWithInput("WsSend") ; Ask for mobile number, then incorporate it to a web URL
 	
 	#MButton:: ToggleAlwaysOnTop() ; Set an app to be always on top
 
@@ -92,7 +92,7 @@ show_hotkeys_list() {
 			%a_space% - shift+Win+z --> ShowOrRunProgram("ZimWiki") `n
 			%a_space% - shift+Win+r --> ShowOrRunProgram("WinRDP") `n
 			%a_space% - shift+Win+p --> ShowOrRunProgram("Kitty") `n
-			%a_space% - Lshift+Win+w --> OpenWebSiteWithInput("WsSend") `n
+			%a_space% - Lshift+Win+w --> ShowOpenWebSiteWithInput("WsSend") `n
 			%a_space% - shift+Win+t --> ShowOrRunProgram("TaskCoach") `n
 			%a_space% - Win+MouseMidBtn:: ToggleAlwaysOnTop() `n
 			%a_space% - Ctrl+MouseMidBtn --> Send "Browser_Back" `n

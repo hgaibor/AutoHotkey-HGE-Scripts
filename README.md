@@ -25,6 +25,10 @@ This script will allow you to improve your daily tasks by assigning custom key m
 
 ## History:
  
+ ### 2022-05-13
+ - Replacement of `ShowOrRunWebSite` by `ShowOpenWebSiteWithInput` (previously `OpenWebSiteWithInput`), code was slightly refactored and now function will include that functionality, resulting in the minor change in definition and name. 
+ - Added defaults validation to allow some parameters on the `.ini` files to be omitted without causing issues, also reducing `.ini` file size and complexity in new elements creation. 
+
  ### 2022-05-12
  - NEW: Created new implementation of ProcessFolderSlot() function: ProcessFolderSlot_X(). It will allow unlimited folder slots and the ability to call folder slots by short, quick to remember, user-defined labels. Folders for this function will be defined at the `[CreateOpenFolder_X] section`
  - Refactored `HgeScript.ini.example.txt` to include just plain configuration, and created **USAGE-GUIDE.md** file to detail the information on how to set up each section for the script

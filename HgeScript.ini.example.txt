@@ -8,7 +8,7 @@
 	WinEnvName="[ExamplePC]: "
 	RunScriptAsAdmin="no"
 	BrowsersProfiles-MaxBrowserArguments="10"
-	OpenWebSiteWithInput-MaxOpenWebSiteInputs="10"
+	ShowOpenWebSiteWithInput-MaxOpenWebSiteInputs="10"
 	CreateOpenFolder_X-MaxFolderSlots=100
 
 # Leaving this for information, although most users won't really need this function
@@ -34,8 +34,8 @@
 	WebAsApp-DefinedBrowserUserProfile="--profile-directory="Default" "
 	WebAsApp-DefinedBrowserRunAsAdmin=""
 	WebAsApp-DefinedBrowserNewWindowArg=""
-	WebAsApp-DefinedBrowserNewTabArg="--app="{BASE_URL_REPLACE_HERE}" "
-	WebAsApp-DefinedBrowserArguments1=""
+	WebAsApp-DefinedBrowserNewTabArg=""
+	WebAsApp-DefinedBrowserArguments1="--app="{BASE_URL_REPLACE_HERE}" "
 	WebAsApp-DefinedBrowserArguments2=""
 	WebAsApp-DefinedBrowserArguments3=""
 
@@ -164,7 +164,7 @@
 	SngMeet-RunAsAdmin="no"
 
 
-[OpenWebSiteWithInput]
+[ShowOpenWebSiteWithInput]
 	WsSend-SiteName="New WhatsApp message"
 	WsSend-BaseUrl="https://web.whatsapp.com/send?text&app_absent=1&phone=593{REPLACE_INPUT1}"
 	WsSend-AhkSearchWindowTitle="WhatsApp"

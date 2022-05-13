@@ -109,7 +109,7 @@ if (RunScriptAsAdmin = "yes")
 	}
 
 	Global MaxOpenWebSiteInputs
-	IniRead, MaxOpenWebSiteInputs, %IniSettingsFilePath%, GeneralSettings, OpenWebSiteWithInput-MaxOpenWebSiteInputs
+	IniRead, MaxOpenWebSiteInputs, %IniSettingsFilePath%, GeneralSettings, ShowOpenWebSiteWithInput-MaxOpenWebSiteInputs
 	If (MaxOpenWebSiteInputs == "ERROR")
 	{
 		MaxOpenWebSiteInputs := 10
@@ -307,15 +307,15 @@ ShowOrRunWebSite(WebSiteNameId){
 		}
 }
 
-OpenWebSiteWithInput(WebSiteWithInputNameId){
-	IniRead, AhkSearchWindowTitle, %IniSettingsFilePath%, OpenWebSiteWithInput, %WebSiteWithInputNameId%-AhkSearchWindowTitle
-	IniRead, AhkGroupName, %IniSettingsFilePath%, OpenWebSiteWithInput, %WebSiteWithInputNameId%-AhkGroupName
-	IniRead, SiteName, %IniSettingsFilePath%, OpenWebSiteWithInput, %WebSiteWithInputNameId%-SiteName
-	IniRead, BaseUrl, %IniSettingsFilePath%, OpenWebSiteWithInput, %WebSiteWithInputNameId%-BaseUrl
-	IniRead, OpenWebSiteOperation, %IniSettingsFilePath%, OpenWebSiteWithInput, %WebSiteWithInputNameId%-OpenWebSiteOperation
+ShowOpenWebSiteWithInput(WebSiteWithInputNameId){
+	IniRead, AhkSearchWindowTitle, %IniSettingsFilePath%, ShowOpenWebSiteWithInput, %WebSiteWithInputNameId%-AhkSearchWindowTitle
+	IniRead, AhkGroupName, %IniSettingsFilePath%, ShowOpenWebSiteWithInput, %WebSiteWithInputNameId%-AhkGroupName
+	IniRead, SiteName, %IniSettingsFilePath%, ShowOpenWebSiteWithInput, %WebSiteWithInputNameId%-SiteName
+	IniRead, BaseUrl, %IniSettingsFilePath%, ShowOpenWebSiteWithInput, %WebSiteWithInputNameId%-BaseUrl
+	IniRead, OpenWebSiteOperation, %IniSettingsFilePath%, ShowOpenWebSiteWithInput, %WebSiteWithInputNameId%-OpenWebSiteOperation
 	
 	; Main URL to insert input parameters
-	IniRead, BaseUrl, %IniSettingsFilePath%, OpenWebSiteWithInput, %WebSiteWithInputNameId%-BaseUrl
+	IniRead, BaseUrl, %IniSettingsFilePath%, ShowOpenWebSiteWithInput, %WebSiteWithInputNameId%-BaseUrl
 
 	ErrorCounter := 0
 	ErrorString := ""
@@ -354,18 +354,31 @@ OpenWebSiteWithInput(WebSiteWithInputNameId){
 
 		if (OpenWebSiteOperation = "Open_Website")
 		{
-			; [BEGIN] Set browser profile in [OpenWebSiteWithInput] this will indicate fields to load from [BrowsersProfiles]
-				IniRead, BrowserProfile, %IniSettingsFilePath%, OpenWebSiteWithInput, %WebSiteWithInputNameId%-BrowserProfile
-				IniRead, OpenTarget, %IniSettingsFilePath%, OpenWebSiteWithInput, %WebSiteWithInputNameId%-OpenTarget
-			; [END] Set browser profile in [OpenWebSiteWithInput] this will indicate fields to load from [BrowsersProfiles]
+			; [BEGIN] Set browser profile in [ShowOpenWebSiteWithInput] this will indicate fields to load from [BrowsersProfiles]
+				IniRead, BrowserProfile, %IniSettingsFilePath%, ShowOpenWebSiteWithInput, %WebSiteWithInputNameId%-BrowserProfile
+				if (BrowserProfile == "ERROR")
+				{
+					; Attempt to load default profile defined at [GeneralSettings] before finally declaring error
+					IniRead, BrowserProfile, %IniSettingsFilePath%, GeneralSettings, BrowsersProfile-DefaultProfile
+					if (BrowserProfile == "ERROR")
+					{
+						ErrorCounter += 1
+						ErrorString .= "- Default BrowserProfile not defined on [GeneralSettings] section or at [BrowsersProfiles] section `n"
+						ErrorString .= "- Or declared BrowserProfile %BrowserProfile% on current WebSiteWithInputNameId does not match a valid BrowserProfile at [BrowsersProfiles] section `n"
+					}
+				}
 
-			; [BEGIN] Load web browser profile from [BrowsersProfiles], this is determined by particular profile under [OpenWebSiteWithInput]
+
+				IniRead, OpenTarget, %IniSettingsFilePath%, ShowOpenWebSiteWithInput, %WebSiteWithInputNameId%-OpenTarget
+			; [END] Set browser profile in [ShowOpenWebSiteWithInput] this will indicate fields to load from [BrowsersProfiles]
+
+			; [BEGIN] Load web browser profile from [BrowsersProfiles], this is determined by particular profile under [ShowOpenWebSiteWithInput]
 				IniRead, BrowserExe, %IniSettingsFilePath%, BrowsersProfiles, %BrowserProfile%-DefinedBrowserExe
 				IniRead, BrowserPath, %IniSettingsFilePath%, BrowsersProfiles, %BrowserProfile%-DefinedBrowserPath
 				IniRead, BrowserUserProfile, %IniSettingsFilePath%, BrowsersProfiles, %BrowserProfile%-DefinedBrowserUserProfile
 				IniRead, NewWindowArg, %IniSettingsFilePath%, BrowsersProfiles, %BrowserProfile%-DefinedBrowserNewWindowArg
 				IniRead, NewTabArg, %IniSettingsFilePath%, BrowsersProfiles, %BrowserProfile%-DefinedBrowserNewTabArg
-			; [END] Load web browser profile from [BrowsersProfiles], this is determined by particular profile under [OpenWebSiteWithInput]
+			; [END] Load web browser profile from [BrowsersProfiles], this is determined by particular profile under [ShowOpenWebSiteWithInput]
 
 			; [BEGIN] Error validation for "Open_Website" OpenWebSiteOperation
 				if (NewWindowArg == "ERROR")
@@ -378,22 +391,17 @@ OpenWebSiteWithInput(WebSiteWithInputNameId){
 					NewTabArg := ""
 				}
 
-				if (BrowserProfile == "ERROR")
-				{
-					ErrorCounter += 1
-					ErrorString .= "- BrowserProfile not defined on [OpenWebSiteWithInput] section or on current WebSiteWithInputNameId at ini file `n"
-				}
-
 				if (OpenTarget == "ERROR")
 				{
-					ErrorCounter += 1
-					ErrorString .= "- OpenTarget not defined on [OpenWebSiteWithInput] section or on current WebSiteWithInputNameId at ini file `n"
+					OpenTarget := "New_Tab"
+					; ErrorCounter += 1
+					; ErrorString .= "- OpenTarget not defined on [ShowOpenWebSiteWithInput] section or on current WebSiteWithInputNameId at ini file `n"
 				}
 
 				if (BrowserExe == "ERROR")
 				{
 					ErrorCounter += 1
-					ErrorString .= "- BrowserExe not defined on [BrowsersProfiles] section at ini file `n"
+					ErrorString .= "- BrowserExe from BrowserProfile *" . BrowserProfile . "* not defined on [BrowsersProfiles] section at ini file `n"
 				}
 
 				if (BrowserUserProfile == "ERROR")
@@ -404,25 +412,25 @@ OpenWebSiteWithInput(WebSiteWithInputNameId){
 				if (BrowserPath == "ERROR")
 				{
 					ErrorCounter += 1
-					ErrorString .= "- BrowserPath not defined on [BrowsersProfiles] section at ini file `n"
+					ErrorString .= "- BrowserPath from BrowserProfile *" . BrowserProfile . "* not defined on [BrowsersProfiles] section at ini file `n"
 				}
 
 				if (NewWindowArg == "ERROR")
 				{
 					ErrorCounter += 1
-					ErrorString .= "- Browser NewWindowArg not defined on [BrowsersProfiles] section at ini file `n"
+					ErrorString .= "- Browser *" . BrowserProfile . "* NewWindowArg not defined on [BrowsersProfiles] section at ini file `n"
 				}
 
 				if (NewTabArg == "ERROR")
 				{
 					ErrorCounter += 1
-					ErrorString .= "- Browser NewTabArg not defined on [BrowsersProfiles] section at ini file `n"
+					ErrorString .= "- Browser *" . BrowserProfile . "* NewTabArg not defined on [BrowsersProfiles] section at ini file `n"
 				}
 
 				if (Arguments1 == "ERROR")
 				{
 					ErrorCounter += 1
-					ErrorString .= "- Browser Arguments1 not defined, define at least 1 Argument on [BrowsersProfiles] section at ini file `n"
+					ErrorString .= "- Browser *" . BrowserProfile . "* Arguments1 not defined, define at least 1 Argument on [BrowsersProfiles] section at ini file `n"
 				}
 			; [END] Error validation for "Open_Website" OpenWebSiteOperation
 
@@ -472,7 +480,6 @@ OpenWebSiteWithInput(WebSiteWithInputNameId){
 			; Multi-window approach
 			GroupAdd, %AhkGroupName%, %AhkSearchWindowTitle%
 			GroupActivate %AhkGroupName%
-			Gosub, AskWebSiteWithInput
 		}
 		else
 		{	
@@ -499,9 +506,9 @@ OpenWebSiteWithInput(WebSiteWithInputNameId){
 			{
 				; This function will take arguments from ini file, sequentially starting from 1, 
 				;  until it finds no continuous N argument or until %MaxOpenWebSiteInputs%
-				IniRead, NameInput%a_index%, %IniSettingsFilePath%, OpenWebSiteWithInput, %WebSiteWithInputNameId%-NameInput%a_index%
-				IniRead, RegExDeleteFromInput%a_index%, %IniSettingsFilePath%, OpenWebSiteWithInput, %WebSiteWithInputNameId%-RegExDeleteFromInput%a_index%
-				IniRead, RegExInsertInput%a_index%, %IniSettingsFilePath%, OpenWebSiteWithInput, %WebSiteWithInputNameId%-RegExInsertInput%a_index%
+				IniRead, NameInput%a_index%, %IniSettingsFilePath%, ShowOpenWebSiteWithInput, %WebSiteWithInputNameId%-NameInput%a_index%
+				IniRead, RegExDeleteFromInput%a_index%, %IniSettingsFilePath%, ShowOpenWebSiteWithInput, %WebSiteWithInputNameId%-RegExDeleteFromInput%a_index%
+				IniRead, RegExInsertInput%a_index%, %IniSettingsFilePath%, ShowOpenWebSiteWithInput, %WebSiteWithInputNameId%-RegExInsertInput%a_index%
 				
 				if (NameInput%a_index% == "ERROR") 
 					break

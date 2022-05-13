@@ -14,8 +14,8 @@ Like the name states, it will include values for global variables that will affe
 ### Variables description
 - **WinEnvName=** --> Descriptive name for this script instance, internal logic *may* allow to run several copies of the same script with different `ahk` and its associated `ini` and `ahk_hotkeys` files names. **NOT TESTED**
 - **RunScriptAsAdmin=** --> Run script as admin user.- This is needed for the `VPN add route` function to work correctly, if you're not going to use that function, leave the default `no` as value. This ws added to fix an issue #020
-- **BrowsersProfiles-MaxBrowserArguments=** --> Use these variable to increase the amount of arguments the `OpenWebSiteWithInput` function loop will read, Default value of 10 should be more than enough for most cases
-- **OpenWebSiteWithInput-MaxOpenWebSiteInputs=** --> Use these variable to increase the maximum amount of inputs that the `OpenWebSiteWithInput` function loop will request, set this value equally or higher than the `[OpenWebSiteWithInput]` Website with the most input. Usual cases should require 2-3 inputs, but you can use as much as 10 which is the default value for this file, or increase it if you **really** need more.
+- **BrowsersProfiles-MaxBrowserArguments=** --> Use these variable to increase the amount of arguments the `ShowOpenWebSiteWithInput` function loop will read, Default value of 10 should be more than enough for most cases
+- **ShowOpenWebSiteWithInput-MaxOpenWebSiteInputs=** --> Use these variable to increase the maximum amount of inputs that the `ShowOpenWebSiteWithInput` function loop will request, set this value equally or higher than the `[ShowOpenWebSiteWithInput]` Website with the most input. Usual cases should require 2-3 inputs, but you can use as much as 10 which is the default value for this file, or increase it if you **really** need more.
 - **CreateOpenFolder_X-MaxFolderSlots=100=** --> UNLIMITED FOLDERS SLOTS!! This variable will define how many loop iterations the script will do to read defined folder shortcuts from the `CreateOpenFolder_X` section below. Set this value to be equal or higher than the maximum ID defined on the `[CreateOpenFolder_X]` section.
 
 ### AHK related function shortcut example
@@ -29,7 +29,7 @@ NO RELATED FUNCTION DIRECTLY CALLED
 	WinEnvName="[HgePC]: "
 	RunScriptAsAdmin="no"
 	BrowsersProfiles-MaxBrowserArguments="10"
-	OpenWebSiteWithInput-MaxOpenWebSiteInputs="10"
+	ShowOpenWebSiteWithInput-MaxOpenWebSiteInputs="10"
 	CreateOpenFolder_X-MaxFolderSlots=100
 
 ```
@@ -68,19 +68,19 @@ Current function accepts one definition
 
 [BrowsersProfiles] section
 -------------------------
-Section to define browsers profiles that will be used by `[ShowOrRunWebSite]` and `[OpenWebSiteWithInput]` sections/fucntions to reduce repetitive code. 
+Section to define browsers profiles that will be used by `[ShowOrRunWebSite]` and `[ShowOpenWebSiteWithInput]` sections/fucntions to reduce repetitive code. 
 `New window` and `new tag` arguments are saved on specific variables to allow more flexibility among different browsers
 
 Define different profiles by changing the first part of the name, before the - character, **DO NOT delete the rest of the variable name**
 
 ### Variables description
-- **[Default]-DefinedBrowserExe=** --> (Required) Executable file path for your browser, like `C:\Program Files\Google\Chrome\Application\chrome.exe`
-- **[Default]-DefinedBrowserPath=** --> (Required) Base folder path for your browser, like `C:\Program Files\Google\Chrome\Application\` be sure to include the last \ character as well.
+- **[Default]-DefinedBrowserExe=** (Required) --> Executable file path for your browser, like `C:\Program Files\Google\Chrome\Application\chrome.exe`
+- **[Default]-DefinedBrowserPath=** (Required) --> Base folder path for your browser, like `C:\Program Files\Google\Chrome\Application\` be sure to include the last \ character as well.
 - **[Default]-DefinedBrowserUserProfile=** --> May be left blank for default profile, **but** check your browser's documentation for detailed commandline launch options, as no validation is done against entered value. 
    Use this if you have multiple user profiles that require launching specific websites.
 - **[Default]-DefinedBrowserNewWindowArg=** --> May be left blank, refer to your browser's documentation for detailed usage
 - **[Default]-DefinedBrowserNewTabArg=** --> May be left blank, refer to your browser's documentation for detailed usage
-- **[Default]-DefinedBrowserArguments1=** --> (Required), if unsure, leave the default value of `""{BASE_URL_REPLACE_HERE}" "` as script will replace this placeholder with the required URL address defined later. 
+- **[Default]-DefinedBrowserArguments1=** (Required),-->  if unsure, leave the default value of `""{BASE_URL_REPLACE_HERE}" "` as script will replace this placeholder with the required URL address defined later. 
   Double quotes can be used, as AHK will remove the first quotes on each side when parsing the `ini` file to the function that will run the command
 - **[Default]-DefinedBrowserArguments2=** --> May be left blank, advanced users can use this to concatenate values.
   Arguments will be concatenated with no spaces, as: `Arg1+Arg2...+ArgN`. Keep this in mind when customizing the argument list
@@ -220,25 +220,28 @@ Create one or more entries on the `.ahk_hotkeys` file. You can create one or mor
 
 [ShowOrRunWebSite] section
 -------------------------
+UPDATE: This function will get deprecated, and is being replaced by the `ShowOpenWebSiteWithInput()` function and sections. 
+Eventually this function and its related documentation will get removed from this guide.
+
 Variables listed here will be used by the function `ShowOrRunWebSite("WebSiteID")` on the `.ahk` script. Similar to `ShowOrRunProgram()`, however it adds functionality to set different arguments for the web browser.
 Double quotes can be used, as AHK will remove the first quotes on each side when parsing the ini file to the cmd function that will run the command
 Default variables for opening browser windows, tested on Chrome (32/64 bits)
 
 ### Variables description
-- **[ID_HERE]-BrowserExe=""** --> (Required) Executable file path for your browser, like `C:\Program Files\Google\Chrome\Application\chrome.exe`
-- **[ID_HERE]-BrowserPath=""** --> (Required) Base folder path for your browser, like `C:\Program Files\Google\Chrome\Application\` be sure to include the last \ character as well.
-- **[ID_HERE]-AhkSearchWindowTitle=""** --> (Required) AHK will search widows containing part of this title
-- **[ID_HERE]-AhkGroupName=""** --> (Required) Matched or created windows will be grouped into this GroupName to alternate between them
-- **[ID_HERE]-SiteName=""** --> (Required) Descriptive site name for the message prompts that will be displayed when invoking the AHK key shortcut. Not using it will show the word ERROR on prompts.
-- **[ID_HERE]-Arguments1=""** --> (Can be empty)
+- **[ID_HERE]-BrowserExe=""** (Required) --> Executable file path for your browser, like `C:\Program Files\Google\Chrome\Application\chrome.exe`
+- **[ID_HERE]-BrowserPath=""** (Required) --> Base folder path for your browser, like `C:\Program Files\Google\Chrome\Application\` be sure to include the last \ character as well.
+- **[ID_HERE]-AhkSearchWindowTitle=""** (Required) --> AHK will search widows containing part of this title
+- **[ID_HERE]-AhkGroupName=""** (Required) --> Matched or created windows will be grouped into this GroupName to alternate between them
+- **[ID_HERE]-SiteName=""** (Required) --> Descriptive site name for the message prompts that will be displayed when invoking the AHK key shortcut. Not using it will show the word ERROR on prompts.
+- **[ID_HERE]-Arguments1=""** (Can be empty) --> 
   You can test the command you need to use in cmd.exe and divide it among the argument slots [1-6]
   **At least one argument is required** Arguments will be concatenated as: `Arg1+Arg2...+Arg6`
   Take this into account when setting the variables as spaces may be needed in some of them to   separate arguments while concatenating
-- **[ID_HERE]-Arguments2=""** --> (Can be empty)
-- **[ID_HERE]-Arguments3=""** --> (Can be empty)
-- **[ID_HERE]-Arguments4=""** --> (Can be empty)
-- **[ID_HERE]-Arguments5=""** --> (Can be empty)
-- **[ID_HERE]-Arguments6=""** --> (Can be empty)
+- **[ID_HERE]-Arguments2=""** (Can be empty) --> 
+- **[ID_HERE]-Arguments3=""** (Can be empty) --> 
+- **[ID_HERE]-Arguments4=""** (Can be empty) --> 
+- **[ID_HERE]-Arguments5=""** (Can be empty) --> 
+- **[ID_HERE]-Arguments6=""** (Can be empty) --> 
 - **[ID_HERE]-RunAsAdmin=""** --> Run as admin (pending to implement...)
 
 ### Example values for variables
@@ -315,23 +318,26 @@ Show as an app
 ```
 
 
-[OpenWebSiteWithInput] section
+[ShowOpenWebSiteWithInput] section
 -------------------------
-To avoid duplicating browser command info, and for simplification, `OpenWebSiteWithInput` function will use one of the declared browser profiles available at the `[Defined browsers]` section
+This function is an enhancement of previous `ShowOrRunWebSite()` function, which allows to enter inputs in order to incorporate them in the final website URL. 
+It was refactored to avoid duplicating browser command info; for simplification, `ShowOpenWebSiteWithInput` function will use one of the declared browser profiles available at the `[Defined browsers]` section. 
+
+If you do not need to open a WebSite requesting inputs, just omit those entries at the `.ini` file entry and it will open the website with the defined BaseUrl
 
 ### Variables description
-- **MyWebsite-SiteName=** --> Descriptive name for the site that will be opened
-- **MyWebsite-BrowserProfile=** --> ID of the Browser defined at `[Defined browsers]`, ID will be the first part entered before the **-** symbol (example, for `Default-DefinedBrowserExe` the ID would be **Default**). 
-- **MyWebsite-OpenTarget=** --> Accepted values are `New_Tab` and `New_Window`, those keywords will use the proper command defined on the selected Browser profile which was defined on `[Defined browsers]` as the command would not be the same among different browsers
-- **MyWebsite-AhkSearchWindowTitle=** --> Use the `DO_NOT_SEARCH` value to disable searching and focus of current similar existing windows. 
+- **MyWebsite-SiteName=** (required) --> Descriptive name for the site that will be opened
+- **MyWebsite-BrowserProfile=** (optional) --> ID of the Browser defined at `[Defined browsers]`, ID will be the first part entered before the **-** symbol (example, for `Default-DefinedBrowserExe` the ID would be **Default**). If this parameter is not set here, it will use the value from the parameter `BrowsersProfile-DefaultProfile` defined at the `[GeneralSettings]` section.
+- **MyWebsite-OpenTarget=** (optional) --> Accepted values are `New_Tab` and `New_Window`, those keywords will use the proper command defined on the selected Browser profile which was defined on `[Defined browsers]` as the command would not be the same among different browsers. If not set, it will take the default value of `New_Tab`.
+- **MyWebsite-AhkSearchWindowTitle=** (optional) --> If not defined it will take the default value of `DO_NOT_SEARCH` which will disable searching and focus of current similar existing windows. 
   Search will work only if the WebSite page is on an active tab on a browser window, and its title contains the set of characters defined here. that can allow to search and group pages.
-- **MyWebsite-AhkGroupName=** --> Use the `DO_NOT_GROUP` along the `XXXX-AhkSearchWindowTitle` to disable searching and focus of current similar existing windows. 
+- **MyWebsite-AhkGroupName=** (optional) --> If not defined it will take the default value of `DO_NOT_GROUP`. This default value along the `XXXX-AhkSearchWindowTitle` will disable searching and focus of current similar existing windows.
   If the `MyWebsite-OpenWebSiteOperation` is `Copy_URL` it will search and focus the existing window matching this title before asking for an input and generating the URL.
-- **MyWebsite-OpenWebSiteOperation=** --> Available options are `Open_Website` and `Copy_URL`
-- **MyWebsite-BaseUrl=** --> URL that will be opened, you define as many placeholders as you require, these will be replaced with the inputs requested on the variables below: 
-- **Input folder definition**
-  The function related to `[OpenWebSiteWithInput]` will use the three variables below to request an input, then it will remove the unwanted characters defined in the RegEx expresion, and finally replace the resulting text with the placeholder present at `MyWebsite-BaseUrl` parameter which is defined on the last expression below
-  
+- **MyWebsite-OpenWebSiteOperation=** (required) --> Available options are `Open_Website` and `Copy_URL`
+- **MyWebsite-BaseUrl=** (required) --> URL that will be opened, you define as many placeholders as you require, these will be replaced with the inputs requested on the variables below: 
+- **Input variables definition**
+  The function related to `[ShowOpenWebSiteWithInput]` will use the three variables below to request an input, then it will remove the unwanted characters defined in the RegEx expression, and finally replace the resulting text with the placeholder present at `MyWebsite-BaseUrl` parameter which is defined on the last expression below
+  You can declare a WebSite with no inputs, but if you need to request 1 or more input, each of them requires to have the 3 parameters listed below, replace 1 with an increasing, continuous number.
 	- **MyWebsite-NameInput1=** --> Descriptive name that will be shown when requesting the input
 	- **MyWebsite-RegExDeleteFromInput1=** -->  Sanitize regEx expression to **SEARCH AND DELETE** matching ocurrences from entered input. **Example:** (Case insensitive `i)` ) remove everything not being a digit, and first 0 from the entered input `"i)[^\d]|^0"`
 	- **MyWebsite-RegExInsertInput1=** --> RegEx expression to **SEARCH AND REPLACE** the same text as the placeholder entered at `MyWebsite-BaseUrl` parameter. **Example:** RegEx to match the placeholder *{REPLACE_INPUT1}* present at *MyWebsite-BaseUrl* `"i)\{REPLACE_INPUT1\}"`
@@ -342,14 +348,14 @@ To avoid duplicating browser command info, and for simplification, `OpenWebSiteW
 ### AHK related function shortcut example
 Create one or more entries on the `.ahk_hotkeys` file. You can create one or more shortcuts to different web URLs and different key mappings, remember to put the same name between the parenthesis as the prefix used at the `.ini` file, like below
 ```
-	>+#w::OpenWebSiteWithInput("WsSend") ; Ask for mobile number, then incorporate it to WhatsApp sending message URL
+	>+#w::ShowOpenWebSiteWithInput("WsSend") ; Ask for mobile number, then incorporate it to WhatsApp sending message URL
 ```
 
 
 ### Code example
 Use this to parse a phone number into WhatsApp send message URL, then copy it to the clipboard.
 ```
-[OpenWebSiteWithInput]
+[ShowOpenWebSiteWithInput]
 	WsSend-SiteName="New WhatsApp message"
 	WsSend-BaseUrl="https://web.whatsapp.com/send?text&app_absent=1&phone=593{REPLACE_INPUT1}"
 	WsSend-AhkSearchWindowTitle="WhatsApp"
