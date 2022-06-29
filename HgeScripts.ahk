@@ -480,6 +480,12 @@ ShowOpenWebSiteWithInput(WebSiteWithInputNameId){
 			; Multi-window approach
 			GroupAdd, %AhkGroupName%, %AhkSearchWindowTitle%
 			GroupActivate %AhkGroupName%
+
+			; Focus existing window, then asking for input data to generate URL
+			if (OpenWebSiteOperation = "Copy_URL")
+			{
+				Gosub, AskWebSiteWithInput
+			}
 		}
 		else
 		{	
@@ -515,9 +521,13 @@ ShowOpenWebSiteWithInput(WebSiteWithInputNameId){
 				
 				NameInput := % NameInput%a_index%
 				InputBox, UrlInput%a_index%, %WinEnvName%,Enter %NameInput% for %SiteName% URL
+				if ErrorLevel
+						Return
+				
 				CleanUrlInput%a_index% := % RegExReplace(UrlInput%a_index%, RegExDeleteFromInput%a_index%)
 				BrowserURL := RegExReplace(BrowserURL, RegExInsertInput%a_index%, CleanUrlInput%a_index%)
 			}
+
 
 			if (OpenWebSiteOperation = "Copy_URL")
 			{
