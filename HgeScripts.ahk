@@ -18,12 +18,7 @@
 #NoEnv
 #Persistent
 
-; Menu definition
-; Menu, Tray, Standard
-; Menu, Tray, Add, Item1
-Menu, Tray, Add, 
-Menu, Tray, Add, Show hotkeys, +#F1
-Menu, Tray, Add, Open ini File, open_ini_file
+
 ; Menu, Tray, Add, Get custom ENV vars, get_current_env_vars
 ; Menu, Tray, Add, Set custom ENV vars, set_env_vars
 
@@ -184,6 +179,51 @@ WrittenPaste(){
 	SendInput, {Raw}%Clipboard%
 }
 
+SearchAndClose(WindowTitle,CloseCommand){
+	; MsgBox test start 
+	; testCounter := 0
+
+	Loop {
+		; testCounter += 1
+		; if (testCounter >= 30)
+  ;   {
+  ;   	MsgBox test end 
+  ;   	return
+  ;   }
+    
+    if (WinExist(WindowTitle))
+    {   
+        WinActivate, %WindowTitle%
+        WinWaitActive, %WindowTitle%,,3
+        if ErrorLevel
+        {
+            ; MsgBox, No windows found
+					MsgBox, 64, %WinEnvName%No more windows, No more windows with the tittle: `n"%WindowTitle%"
+          return
+        }
+        else
+        {
+	       ;  ; Send, {Alt}{f4}
+	       	Switch CloseCommand
+	       	{
+	       	Case "Alt+F4":
+	        	Send, !{f4}
+	       	Case "Control+Q":
+	        	Send, ^q
+	       	; Default:
+	       	;     Statements3
+	       	}
+	        Sleep, 100
+        }
+
+    }
+    else
+    {
+			MsgBox, 64, %WinEnvName%No more windows, No more windows with the tittle: `n"%WindowTitle%"
+			Return
+    }
+	}
+}
 
 ShowOrRunProgram(ProgramNameId){
 	; Unified all functions for individual programs into sigle re-usable function, taking the parameters from SCRIPT.INI file	
@@ -1063,13 +1103,19 @@ CreateOpenFolder(BaseFolderPath, LocationName, FolderOperation){
 			
 			; Copy text to Clipboard
 			clipboard = %FolderFullPath%
-			If WinExist(FolderName)
+			; SetTitleMatchMode, 2
+			WinWait ,%FolderName% ahk_exe explorer.exe, , 0.5 ; test 1 
+			; If WinExist("ahk_exe explorer.exe " FolderName) ; OK code
+			If !ErrorLevel ; test 1
 			{
 				; MsgBox, Window exists
-				WinActivate, %FolderName%
+				WinActivate
+				; WinActivate, %FolderName%
+				; MsgBox, test win activate ; [HGE] (DEBUG) Uncomment_for_tests
 			}
 			else
 			{
+				; MsgBox, test
 				if (FolderOperation == "Open_Folder")
 				{
 					MsgBox, 36, %WinEnvName%Open Folder, Open %FolderFullPath%?`nNo window with that title found, open? 
@@ -1088,6 +1134,7 @@ CreateOpenFolder(BaseFolderPath, LocationName, FolderOperation){
 				else if (FolderOperation == "Open_Create")
 				{
 					; Since already asked for the folder name makes sense to open automatically 
+					; MsgBox, Opening requested window ; [HGE] (DEBUG) Uncomment_for_tests
 					Run, explorer.exe "%FolderFullPath%"
 				}
 			}

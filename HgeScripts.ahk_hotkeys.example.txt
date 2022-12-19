@@ -14,7 +14,15 @@
 	; SPACE --> Space bar key
 	; Numpad0 --> Number pad 0 
 
+; Menu definition
+Menu, Tray, Add, 
+Menu, Tray, Add, Show hotkeys, +#F1
+Menu, Tray, Add, Open ini File, open_ini_file
+Menu, Tray, Add, Close Network Messages, LbSearchAndClose
 ; Hot Keys definition 
+
+	+#x::Gosub, LbSearchAndClose
+
 	+#F1::show_hotkeys_list()  ; Hotkeys mapping information (please fill this list manually below to reflect your changes)
 		
 	; ^!r::Reload  ; Assign Ctrl-Alt-R as a hotkey to reload the script.
@@ -108,3 +116,8 @@ show_hotkeys_list() {
 
 		)
 }
+
+return
+LbSearchAndClose:
+SearchAndClose("Restoring Network Connections","Alt+F4")
+return
