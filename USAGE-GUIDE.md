@@ -230,7 +230,7 @@ Default variables for opening browser windows, tested on Chrome (32/64 bits)
 ### Variables description
 - **[ID_HERE]-BrowserExe=""** (Required) --> Executable file path for your browser, like `C:\Program Files\Google\Chrome\Application\chrome.exe`
 - **[ID_HERE]-BrowserPath=""** (Required) --> Base folder path for your browser, like `C:\Program Files\Google\Chrome\Application\` be sure to include the last \ character as well.
-- **[ID_HERE]-AhkSearchWindowTitle=""** (Required) --> AHK will search widows containing part of this title
+- **[ID_HERE]-AhkSearchWindowTitle=""** (Required) --> AHK will search widows containing part of this title, you can also specify an `ahk app.exe` search pattern, though usage scenarios may be limited to opening a new browser if no window is present 
 - **[ID_HERE]-AhkGroupName=""** (Required) --> Matched or created windows will be grouped into this GroupName to alternate between them
 - **[ID_HERE]-SiteName=""** (Required) --> Descriptive site name for the message prompts that will be displayed when invoking the AHK key shortcut. Not using it will show the word ERROR on prompts.
 - **[ID_HERE]-Arguments1=""** (Can be empty) --> 

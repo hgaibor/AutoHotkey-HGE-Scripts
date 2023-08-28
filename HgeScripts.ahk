@@ -911,7 +911,13 @@ ProcessFolderSlot_X(){
 	ProcessFolderSlot_X_ValidateData:
 		If ((BaseFolderPath == "ERROR"))
 		{
-			MsgBox, ERROR... SLOT %FolderSlot% not found, check the "%IniSettingsFileName%" file under [CreateOpenFolder_X]
+			MsgBox, ERROR... SLOT "%FolderSlot%" base folder path not defined, check the "%IniSettingsFileName%" file under `n[CreateOpenFolder_X] --> BaseFolderPath_xx
+			return 
+		}
+		
+		if (!FileExist(BaseFolderPath))
+		{
+			MsgBox, ERROR... SLOT "%FolderSlot%" base folder directory not found, check the "%IniSettingsFileName%" file under `n[CreateOpenFolder_X] --> BaseFolderPath_xx
 			return 
 		}
 
