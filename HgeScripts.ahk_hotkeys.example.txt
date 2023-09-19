@@ -34,7 +34,7 @@ Menu, Tray, Add, Close Network Messages, LbSearchAndClose
 	^#s::ShowOrRunProgram("St3") ; SublimeText
 	+#a::ShowOrRunProgram("AIMP") 
 	+#z::ShowOrRunProgram("ZimWiki")
-	+#r::ShowOrRunProgram("WinRDP") ; Windows remote desktop
+	^#r::ShowOrRunProgram("WinRDP") ; Windows remote desktop
 	+#p::ShowOrRunProgram("Kitty") ; Putty alternative, very good
 	+#t::ShowOrRunProgram("TaskCoach")
 	>+#w::ShowOpenWebSiteWithInput("WsSend") ; Ask for mobile number, then incorporate it to a web URL
@@ -46,9 +46,17 @@ Menu, Tray, Add, Close Network Messages, LbSearchAndClose
 	!MButton:: Send {Browser_Forward} ; [HGE] Send browser forward
 	^!Insert::WrittenPaste() ; Send clipboard contents as individual keystrokes, useful when you can't paste into browsers or remote consoles
 
-	;Slot implementation of CreateOpenFolder() function
 	>+#e::ProcessFolderSlot() ; Legacy implementation of Folder slots
+	
+	;Slot implementation of CreateOpenFolder() function
 	+#e::ProcessFolderSlot_X() ; NEW, Mega, unlimited folder slots implementation ^_^
+	; +#e::ProcessFolderSlot_X("Label in quotes")
+	; +#e::ProcessFolderSlot(ID)
+
+	; Slot-based RegEx text replacement function. Useful to format repetitive text or remove certain text on a regular basis
+	+#r::ProcessRegExReplaceText_X()
+	; +#r::ProcessRegExReplaceText_X(ID)
+	; +#r::ProcessRegExReplaceText_X("label_in_quotes")
 
 #IfWinActive ahk_class PuTTYConfigBox  ; Shortcuts for Putty Config window 
 	; Validation to enable  start button quick key press on Putty
@@ -108,6 +116,7 @@ show_hotkeys_list() {
 			%a_space% - Ctrl+Alt+Insert --> Write clipboard as key presses `n
 			%a_space% - Rshift+Win+e --> Show/Open folder slot (1-9+0), press "e" for list of slots `n
 			%a_space% - shift+Win+e --> Show/Open folder X slot (unlimited), press "e + ENTER" for list of slots `n
+			%a_space% - shift+Win+r --> ReplaceText slot (unlimited), press "e + ENTER" for list of ReplaceText slots `n
 			`n
 			=== In App hotkeys === `n
 			%a_space% - Alt+s --> Start Kitty loaded session `n

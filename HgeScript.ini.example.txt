@@ -10,6 +10,9 @@
 	BrowsersProfiles-MaxBrowserArguments="10"
 	ShowOpenWebSiteWithInput-MaxOpenWebSiteInputs="10"
 	CreateOpenFolder_X-MaxFolderSlots=100
+	RegExReplaceText_X-MaxReplaceTextSlots=100
+	BrowsersProfile-DefaultProfile="Default"
+
 
 # Leaving this for information, although most users won't really need this function
 [VPNSettings]
@@ -199,3 +202,31 @@
 	LocationName_25="Downloads folder"
 	FolderLabel_25="DN"
 	FolderOperation_25="Open_Folder"
+
+[RegExReplaceText_X]
+	# ReplaceTextName_10="MAC with colons"
+	# ReplaceTextDescription_10="MAC format replace, xxxxx to xx:xx:xx"
+	# ReplaceTextLabel_10="MAC"
+	# # ReplaceTextRegExString_10 is a RegEx string to search, THIS IS REQUIRED
+	# ReplaceTextRegExString_10="(?<!^.)(..)(?=[^$])"
+	# # ReplaceTextReplaceString can be EMPTY, it will remove matched characters
+	# ReplaceTextReplaceString_10="$1:"
+	# # SELECT ONE OPTION BELOW, ONLY USE THESE TWO VALUES
+	# ReplaceTextOperation_10="Copy_to_clipboard"
+	# ReplaceTextOperation_10="Simulate_Typing"
+
+	ReplaceTextName_10="MAC with colons"
+	ReplaceTextDescription_10="MAC format replace, xxxxx to xx:xx:xx"
+	ReplaceTextLabel_10="MAC"
+	ReplaceTextRegExString_10="(?<!^.)(..)(?=[^$])"
+	ReplaceTextReplaceString_10="$1:"
+	ReplaceTextOperation_10="Copy_to_clipboard"
+	; ReplaceTextOperation_10="Simulate_Typing"
+
+
+	ReplaceTextName_11="MAC with NO colons"
+	ReplaceTextDescription_11="MAC format replace, xx:xx:xx to xxxxx"
+	ReplaceTextLabel_11="ALPHA"
+	ReplaceTextRegExString_11="[:.\s\-]"
+	ReplaceTextReplaceString_11=""
+	ReplaceTextOperation_11="Copy_to_clipboard"

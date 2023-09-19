@@ -738,9 +738,10 @@ FQDN_to_IP(ByRef FQDN) {
 	}
 }
 
-global FolderSlotIH, FolderSlotSearchById := false
+; Functions to process input hooks, which are used by slot-based functions
+global ProcessSlotInputHook, FolderSlotSearchById := false
 
-FolderSlotIH_Char(ih, char){
+ProcessSlotInputHook_Char(ih, char){
     InputFirstChar := SubStr(ih.input, 1,1)
 
     if InputFirstChar is integer 
@@ -751,7 +752,7 @@ FolderSlotIH_Char(ih, char){
     if (GetKeyVK(char) = 27 )
     {
 			ToolTip, % "ABORTED"
-			FolderSlotIH.Stop()
+			ProcessSlotInputHook.Stop()
     }
     else if (FolderSlotSearchById) {
     	ToolTip, % "FolderSlot ID: " ih.input
@@ -763,42 +764,43 @@ FolderSlotIH_Char(ih, char){
     }
 }
 
-FolderSlotIH_KeyDown(ih, vk, sc){
+ProcessSlotInputHook_KeyDown(ih, vk, sc){
   if (vk = 8){ ; {Backspace}
-    FolderSlotIH_Char(ih, "")
+    ProcessSlotInputHook_Char(ih, "")
   }
 
   else if (vk = 32){ ; {Space}
 		if (FolderSlotSearchById = true)
 		{
-			FolderSlotIH.Stop()
+			ProcessSlotInputHook.Stop()
 		}
 	}
 
 	else if (vk = 27){ ; {Esc}
-		FolderSlotIH.Stop()
+		ProcessSlotInputHook.Stop()
 	}
 
   else if (vk = 9){ ; Tab
-  	FolderSlotIH.Stop()
+  	ProcessSlotInputHook.Stop()
   }
 
   return
-	RemoveFolderSlotIH_KeyDownToolTip:
+	RemoveProcessSlotInputHook_KeyDownToolTip:
 	ToolTip
 	return
 }
 
-FolderSlotIH_End(){
-	SetTimer, RemoveFolderSlotIH_EndToolTip, -500
+ProcessSlotInputHook_End(){
+	SetTimer, RemoveProcessSlotInputHook_EndToolTip, -500
 
 	return
-	RemoveFolderSlotIH_EndToolTip:
+	RemoveProcessSlotInputHook_EndToolTip:
 	ToolTip
 	return
 }
+; END Functions to process input hooks, which are used by slot-based functions
 
-ProcessFolderSlot_X(){
+ProcessFolderSlot_X(IdOrLabel:=""){
 	FolderSlotLabelFound := false
 	IniRead, MaxFolderSlots, %IniSettingsFilePath%, GeneralSettings, CreateOpenFolder_X-MaxFolderSlots
 	If (MaxFolderSlots == "ERROR")
@@ -806,28 +808,46 @@ ProcessFolderSlot_X(){
 		MaxFolderSlots := 20
 	}
 
+	; BEGIN code to call slot directly is defined via hotkey
+	if (IdOrLabel != "")
+	{
+		if IdOrLabel is integer 
+			FolderSlotSearchById := true
+		else
+			FolderSlotSearchById := false
+
+		FolderSlot := Trim(IdOrLabel)
+		Gosub, FolderSlot_IdOrLabel_DirectGoTo
+		return ; safe return to prevent declaring input handler
+	}
+	; END code to call slot directly is defined via hotkey
+
 	FolderSlotCounter := 0
 	ToolTip, % "Type FolderSlot ID or label: "
 	FolderSlotSearchById := false
 
-	FolderSlotIH := InputHook("L30T20", "{Enter}{Tab}")
-	FolderSlotIH.OnChar := Func("FolderSlotIH_Char")
-	FolderSlotIH.OnKeyDown := Func("FolderSlotIH_KeyDown")
-	FolderSlotIH.OnEnd := Func("FolderSlotIH_End")
-	FolderSlotIH.KeyOpt("{Backspace}{esc}{space}{tab}", "N")
-	FolderSlotIH.Start()
+	ProcessSlotInputHook := InputHook("L30T20", "{Enter}{Tab}")
+	ProcessSlotInputHook.OnChar := Func("ProcessSlotInputHook_Char")
+	ProcessSlotInputHook.OnKeyDown := Func("ProcessSlotInputHook_KeyDown")
+	ProcessSlotInputHook.OnEnd := Func("ProcessSlotInputHook_End")
+	ProcessSlotInputHook.KeyOpt("{Backspace}{esc}{space}{tab}", "N")
+	ProcessSlotInputHook.Start()
 
-	ErrorLevel := FolderSlotIH.Wait()
+	ErrorLevel := ProcessSlotInputHook.Wait()
 	if (ErrorLevel = "EndKey"){
-    ErrorLevel .= ":" FolderSlotIH.EndKey	
+    ErrorLevel .= ":" ProcessSlotInputHook.EndKey	
     ToolTip ; Visual improvement to remove ToolTip before confirmation
-		FolderSlot := FolderSlotIH.Input
+		FolderSlot := ProcessSlotInputHook.Input
 	}
 
   if (ErrorLevel = "Stopped"){
 		FolderSlot := ""
 		return
   }
+
+	; BEGIN code to call slot directly is defined via hotkey
+	FolderSlot_IdOrLabel_DirectGoTo:
+	; END code to call slot directly is defined via hotkey
 
   FolderSlot := Trim(FolderSlot)
 	FolderSlotIndex := 
@@ -1166,9 +1186,207 @@ CreateOpenFolder(BaseFolderPath, LocationName, FolderOperation){
 }
 
 
+ProcessRegExReplaceText_X(IdOrLabel:=""){
+	ReplaceTextSlotLabelFound := false
+	IniRead, MaxReplaceTextSlots, %IniSettingsFilePath%, GeneralSettings, RegExReplaceText_X-MaxReplaceTextSlots
+	If (MaxReplaceTextSlots == "ERROR")
+	{
+		MaxReplaceTextSlots := 20
+	}
 
+	; BEGIN code to call slot directly is defined via hotkey
+	if (IdOrLabel != "")
+	{
+		if IdOrLabel is integer 
+			FolderSlotSearchById := true
+		else
+			FolderSlotSearchById := false
 
+		ReplaceTextSlot := Trim(IdOrLabel)
+		Gosub, ReplaceText_IdOrLabel_DirectGoTo
+		return ; safe return to prevent declaring input handler
+	}
+	; END code to call slot directly is defined via hotkey
 
+	ReplaceTextSlotCounter := 0
+	ToolTip, % "Type ReplaceTextSlot ID or label: "
+	FolderSlotSearchById := false
+
+	ProcessSlotInputHook := InputHook("L30T20", "{Enter}{Tab}")
+	ProcessSlotInputHook.OnChar := Func("ProcessSlotInputHook_Char")
+	ProcessSlotInputHook.OnKeyDown := Func("ProcessSlotInputHook_KeyDown")
+	ProcessSlotInputHook.OnEnd := Func("ProcessSlotInputHook_End")
+	ProcessSlotInputHook.KeyOpt("{Backspace}{esc}{space}{tab}", "N")
+	ProcessSlotInputHook.Start()
+
+	ErrorLevel := ProcessSlotInputHook.Wait()
+	if (ErrorLevel = "EndKey"){
+	ErrorLevel .= ":" ProcessSlotInputHook.EndKey	
+	ToolTip ; Visual improvement to remove ToolTip before confirmation
+		ReplaceTextSlot := ProcessSlotInputHook.Input
+	}
+
+	if (ErrorLevel = "Stopped"){
+		ReplaceTextSlot := ""
+		return
+	}
+	; BEGIN code to call slot directly is defined via hotkey
+	ReplaceText_IdOrLabel_DirectGoTo:
+	; END code to call slot directly is defined via hotkey
+
+	ReplaceTextSlot := Trim(ReplaceTextSlot)
+	ReplaceTextSlotIndex := 
+
+	if (ReplaceTextSlot = "e"){
+		ReplaceTextSlotsDescription := "=== Currently set ReplaceText Slots === `n`n"
+		Loop, %MaxReplaceTextSlots%
+		{
+			ReplaceTextSlotIndex := A_Index
+			if (A_Index == MaxReplaceTextSlots)
+			{
+				ReplaceTextSlotIndex := 0 
+			}
+			; Not including "ReplaceTextReplaceString" nor "ReplaceTextRegExString" since they have no informational purpose in this function
+			IniRead, ReplaceTextLabel, %IniSettingsFilePath%, RegExReplaceText_X, ReplaceTextLabel_%ReplaceTextSlotIndex%
+			IniRead, ReplaceTextName, %IniSettingsFilePath%, RegExReplaceText_X, ReplaceTextName_%ReplaceTextSlotIndex%
+			IniRead, ReplaceTextDescription, %IniSettingsFilePath%, RegExReplaceText_X, ReplaceTextDescription_%ReplaceTextSlotIndex%
+			IniRead, ReplaceTextOperation, %IniSettingsFilePath%, RegExReplaceText_X, ReplaceTextOperation_%ReplaceTextSlotIndex%
+
+			if (ReplaceTextName != "ERROR")
+			{
+				ReplaceTextSlotCounter += 1
+				ReplaceTextSlotsDescription .= " - Slot: [" ReplaceTextSlotIndex "] -- Label: [" ReplaceTextLabel "]`n    Name: " ReplaceTextName " -- Description: " ReplaceTextDescription "`n"
+			}
+		}
+
+		ReplaceTextSlotsDescription .= "`nTotal slots: (" ReplaceTextSlotCounter ")"
+
+		if (ReplaceTextSlotCounter < 20)
+		{
+			MsgBox,32,%WinEnvName%List of set up folder slots, %ReplaceTextSlotsDescription%
+		}
+		else
+		{
+			MsgBox,32,%WinEnvName%,List of set up ReplaceText slots is too long, full list was copied to clipboard
+				clipboard = % ReplaceTextSlotsDescription
+		}
+		
+		return
+
+	}
+
+	if (FolderSlotSearchById)
+	{
+		IniRead, ReplaceTextName, %IniSettingsFilePath%, RegExReplaceText_X, ReplaceTextName_%ReplaceTextSlot%
+		IniRead, ReplaceTextDescription, %IniSettingsFilePath%, RegExReplaceText_X, ReplaceTextDescription_%ReplaceTextSlot%
+		IniRead, ReplaceTextRegExString, %IniSettingsFilePath%, RegExReplaceText_X, ReplaceTextRegExString_%ReplaceTextSlot%
+		IniRead, ReplaceTextReplaceString, %IniSettingsFilePath%, RegExReplaceText_X, ReplaceTextReplaceString_%ReplaceTextSlot%
+		IniRead, ReplaceTextOperation, %IniSettingsFilePath%, RegExReplaceText_X, ReplaceTextOperation_%ReplaceTextSlot%
+
+		; MsgBox, "%ReplaceTextName% %ReplaceTextDescription% %ReplaceTextRegExString% %ReplaceTextReplaceString% %ReplaceTextOperation%" ; [HGE] (DEBUG) Uncomment_for_tests
+
+		Gosub, ProcessReplaceTextSlot_X_ValidateData
+	}
+	else 
+	{
+		Loop, %MaxReplaceTextSlots%
+		{
+			ReplaceTextSlotIndex := A_Index
+			if (A_Index == MaxReplaceTextSlots)
+			{
+				ReplaceTextSlotIndex := 0 
+			}
+			IniRead, ReplaceTextLabel, %IniSettingsFilePath%, RegExReplaceText_X, ReplaceTextLabel_%ReplaceTextSlotIndex%
+
+			if (ReplaceTextLabel = ReplaceTextSlot)
+			{
+				IniRead, ReplaceTextName, %IniSettingsFilePath%, RegExReplaceText_X, ReplaceTextName_%ReplaceTextSlotIndex%
+				IniRead, ReplaceTextDescription, %IniSettingsFilePath%, RegExReplaceText_X, ReplaceTextDescription_%ReplaceTextSlotIndex%
+				IniRead, ReplaceTextRegExString, %IniSettingsFilePath%, RegExReplaceText_X, ReplaceTextRegExString_%ReplaceTextSlotIndex%
+				IniRead, ReplaceTextReplaceString, %IniSettingsFilePath%, RegExReplaceText_X, ReplaceTextReplaceString_%ReplaceTextSlotIndex%
+				IniRead, ReplaceTextOperation, %IniSettingsFilePath%, RegExReplaceText_X, ReplaceTextOperation_%ReplaceTextSlotIndex%
+
+				ReplaceTextSlotLabelFound := true
+
+				; MsgBox, "%ReplaceTextName% %ReplaceTextDescription% %ReplaceTextRegExString% %ReplaceTextReplaceString% %ReplaceTextOperation%" ; [HGE] (DEBUG) Uncomment_for_tests
+
+				Gosub, ProcessReplaceTextSlot_X_ValidateData
+				break
+			}
+		}
+
+		if (!ReplaceTextSlotLabelFound)
+		{
+			MsgBox, 48, %WinEnvName%Not found, ReplaceText slot not found, please check spelling or enter 'e' to show list of all ReplaceText slots.
+		}
+
+	}
+	return
+	
+	ProcessReplaceTextSlot_X_ValidateData:
+		If (ReplaceTextName == "ERROR")
+		{
+			MsgBox, SLOT ReplaceTextName is empty, set it on the "%IniSettingsFileName%" file, `nor confirm if entered ID exists at the "%IniSettingsFileName%" file file under `n[RegExReplaceText_X] --> ReplaceTextName_xx
+			return
+		}
+
+		If (ReplaceTextDescription == "ERROR")
+		{
+			ReplaceTextDescription := "Not defined"
+		}
+
+		If (ReplaceTextRegExString == "")
+		{
+			MsgBox, SLOT ReplaceTextRegExString is empty, set it on the "%IniSettingsFileName%" file
+			return
+		}
+
+		; If (ReplaceTextReplaceString == "")
+		; {
+			; MsgBox, SLOT ReplaceTextReplaceString is empty, set it on the "%IniSettingsFileName%" file
+			; return
+		; }
+
+		If (ReplaceTextOperation == "")
+		{
+			ReplaceTextOperation := "Copy_to_clipboard"
+		}
+		
+		; MsgBox, "%ReplaceTextName% %ReplaceTextDescription% %ReplaceTextRegExString% %ReplaceTextReplaceString% %ReplaceTextOperation%" ; [HGE] (DEBUG) Uncomment_for_tests
+		
+		RunRegExReplaceText(ReplaceTextName, ReplaceTextDescription, ReplaceTextRegExString, ReplaceTextReplaceString, ReplaceTextOperation)
+
+	; Label safe exit point: ProcessReplaceTextSlot_X_ValidateData
+	return
+}
+
+RunRegExReplaceText(ReplaceTextName, ReplaceTextDescription, RegExString, ReplaceString, ReplaceTextOperation){
+	InputBox, BaseText, %WinEnvName%Enter text for %ReplaceTextName% text replace:,Description: %ReplaceTextDescription%
+
+	if ErrorLevel
+	{		
+		; MsgBox, "ErrorLevel due to cancel" ; [HGE] (DEBUG) Uncomment_for_tests
+		Return
+	}
+
+	; RegExMatch(BaseText,RegExString,ReplacedText)
+	ReplacedText := RegExReplace(BaseText,RegExString,ReplaceString)
+
+	if ErrorLevel
+	{		
+		MsgBox, %ErrorLevel% 
+		Return
+	}
+	
+	if (ReplaceTextOperation =="Copy_to_clipboard")
+	{
+		Clipboard := ReplacedText
+	}
+	else if (ReplaceTextOperation =="Simulate_Typing")
+	{
+		SendInput, {Raw}%ReplacedText%
+	}
+}
 
 
 RunWithNoElevation(Target, Arguments, WorkingDirectory){

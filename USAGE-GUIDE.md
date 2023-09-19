@@ -1,11 +1,17 @@
 HgeScripts .ini file guide
 ==========================
-The purpose of this AHK script is to automate common tasks as much as possibe, in a simple way (once you set your *ini* file properly.
+The purpose of this AHK script is to automate common tasks as much as possibe, in a simple way (once you set your *ini* file properly, that is).
 Despite that goal, initial setup may be complex for some, at least at the beginning. 
 
 This guide will separate explaining from base example.ini file in order to make it as clear and as detailed as possible, with easy-to-read markdown formatting. 
 
 Code will be put in blocks, so after reading the explaining, you can copy-paste the full block into your own *.ini* file
+
+
+Additional functions
+-------------------------
+Some short functions that provide useful functionality are defined on the `ahk_hotkeys` file directly, please refer to the `HgeScripts.ahk_hotkeys.example.txt` file to see these small functions that are right below the AHK shortcut. 
+
 
 [GeneralSettings] section
 -------------------------
@@ -16,7 +22,9 @@ Like the name states, it will include values for global variables that will affe
 - **RunScriptAsAdmin=** --> Run script as admin user.- This is needed for the `VPN add route` function to work correctly, if you're not going to use that function, leave the default `no` as value. This ws added to fix an issue #020
 - **BrowsersProfiles-MaxBrowserArguments=** --> Use these variable to increase the amount of arguments the `ShowOpenWebSiteWithInput` function loop will read, Default value of 10 should be more than enough for most cases
 - **ShowOpenWebSiteWithInput-MaxOpenWebSiteInputs=** --> Use these variable to increase the maximum amount of inputs that the `ShowOpenWebSiteWithInput` function loop will request, set this value equally or higher than the `[ShowOpenWebSiteWithInput]` Website with the most input. Usual cases should require 2-3 inputs, but you can use as much as 10 which is the default value for this file, or increase it if you **really** need more.
-- **CreateOpenFolder_X-MaxFolderSlots=100=** --> UNLIMITED FOLDERS SLOTS!! This variable will define how many loop iterations the script will do to read defined folder shortcuts from the `CreateOpenFolder_X` section below. Set this value to be equal or higher than the maximum ID defined on the `[CreateOpenFolder_X]` section.
+- **CreateOpenFolder_X-MaxFolderSlots=100** --> UNLIMITED FOLDERS SLOTS!! This variable will define how many loop iterations the script will do to read defined folder shortcuts from the `CreateOpenFolder_X` section below. Set this value to be equal or higher than the maximum ID defined on the `[CreateOpenFolder_X]` section.
+- **RegExReplaceText_X-MaxReplaceTextSlots=100** --> Unlimited slots as well! Similarly to the folder slots, this variable will define how many loop iterations the script will do to read defined folder shortcuts from the `RegExReplaceText_X` section below. Set this value to be equal or higher than the maximum ID defined on the `[RegExReplaceText_X]` section.
+- **BrowsersProfile-DefaultProfile="Default"** --> This variable will be used to determine the default browser that the `ShowOpenWebSiteWithInput()` will use if not defined on that section. Define as many required browser profiles as needed under the `[BrowsersProfiles]` section on the `ini` file.
 
 ### AHK related function shortcut example
 ```
@@ -374,6 +382,9 @@ Label can have a maximum length of 30 characters, and include letters, numbers, 
 
 Pressing the hotkey that calls this function will show a tooltip next to the mouse cursor, where the entered text will be displayed. Once you enter desired ID or label, press [enter], [space], or [tab] keys to confirm the search criteria. 
 
+NEW: Optionally you can create a hotkey shortcut with the ID or label to call a specific slot directly, like this: `ProcessFolderSlot_X(numeric_ID)` or with the label, `ProcessFolderSlot_X("Label")`
+
+
 If you enter a number as the first character, it will trigger the `Search by id` mode, which will load the folder slot data from the definition that has the same numeric ID as entered. If no ID exists on the `.ini` file, it will show an error message. 
 
 If you enter letters or special characters first, it will perform the search based on `label`. This mode will allow [space] to be entered as part of the search criteria, so confirm desired text with either [enter] or [tab].
@@ -425,7 +436,68 @@ You may assign one or more calls to the same function with different key mapping
 	FolderOperation_25="Open_Folder"
 ```
 
-
-Additional functions
+[RegExReplaceText_X] section
 -------------------------
-Some short functions that provide useful functionality are defined on the `ahk_hotkeys` file directly, please refer to the `HgeScripts.ahk_hotkeys.example.txt` file to see these small functions that are right below the AHK shortcut. 
+New implementation to allow to create several slots to replace text. 
+Similar in mechanics to the `ProcessFolderSlot_X()` function at ahk script.
+
+The numeric ID of the entries that you define under the `ini` file can be used, or the short text label of your preference. 
+Label can have a maximum length of 30 characters, and include letters, numbers, spaces, and some special characters. There is no validation on which special characters can be entered, but the recommended approach is to stick to most common ones like dashes, hyphens and such.
+
+Pressing the hotkey defined on the `ahk_hotkeys` file will show a tooltip next to the mouse cursor, where the entered text will be displayed. Once you enter desired ID or label, press [enter], [space], or [tab] keys to confirm the search criteria. 
+
+NEW: Optionally you can create a hotkey shortcut with the ID or label to call a specific slot directly, like this: `RegExReplaceText_X(numeric_ID)` or with the label, `RegExReplaceText_X("Label")`
+
+Similarly to `ProcessFolderSlot_X()` function, if you enter a number as the first character, it will trigger the `Search by id` mode, which will load the ReplaceText slot data from the definition that has the same numeric ID as entered. If no ID exists on the `.ini` file, it will show an error message. 
+
+If you enter letters or special characters first, it will perform the search based on `label`. This mode will allow [space] to be entered as part of the search criteria, so confirm desired text with either [enter] or [tab].
+
+**Important:** IDs on this function do not need to be continuous, in other words, you can create a group of slots with `_10,_11,_12`, other one starting at `_20,_21,_22`, and another one at te 30's range without affecting the searching loop, **as long as** you increase the value of the parameter `RegExReplaceText_X-MaxReplaceTextSlots=` to be equal or higher than the max numeric ID that you create among all groups. This parameter is present at the `[GeneralSettings]` section.
+
+
+
+### Variables description
+Replace `XXXX` with the ID that you need, just make sure it's unique among the rest of IDs in the [RegExReplaceText_X] section
+- **ReplaceTextName_XXXX=** --> Required, short name for this RegEx expresion, maybe use something that reminds you what text this slot will replace
+- **ReplaceTextDescription_XXXX=** --> Full description of what this RegEx will do, this is optional, but this will be shown on the prompt for entering the value, so enter something useful
+- **ReplaceTextLabel_XXXX=** --> Short label for quick reference (max 30 chars)
+- **ReplaceTextRegExString_XXXX=** --> Perl-compatible regular expression to search text on the string that will be prompted via input box, for additional reference view the documentation of the used function at https://www.autohotkey.com/docs/v1/lib/RegExMatch.htm
+- **ReplaceTextReplaceString_XXXX=** --> RegEx replace mode syntax, it can empty ("") and it will remove matching text, or you can use PERL-like variables for search groups like $1 $n
+	  All validation against invalid characters is done via RegEx, so test this before on a site like https://regexr.com/ making sure it works correctly
+- **ReplaceTextOperation_XXXX=** --> Current supported operations are
+	- *Copy_to_clipboard*: Will send the RegEx sanitized text to the clipboard. 
+	- *Simulate_Typing*: As soon as the input box dissapears, it will simulate key typing into the last focused window, there may not really be too many usage cases for this particular mode.
+
+### AHK related function shortcut example
+Create one entry on the `.ahk_hotkeys` file. 
+You may assign one or more calls to the same function with different key mapping, however the different folder definitions are created on the `.ini` file
+```
+	+#r::RegExReplaceText_X() ; RegEx-based ReplaceText slots
+	+#r::RegExReplaceText_X(10) ; Call a direct ReplaceText slot by it's numeric ID
+	+#r::RegExReplaceText_X("MAC") ; Call a direct ReplaceText slot by it's ReplaceTextLabel_ field
+```
+
+
+### Code example
+```
+[RegExReplaceText_X]
+	ReplaceTextName_10="MAC with colons"
+	ReplaceTextDescription_10="MAC format replace, xxxxx to xx:xx:xx"
+	ReplaceTextLabel_10="MAC"
+	# ReplaceTextRegExString_10 is a RegEx string to search, THIS IS REQUIRED
+	ReplaceTextRegExString_10="(?<!^.)(..)(?=[^$])"
+	# ReplaceTextReplaceString can be EMPTY, it will remove matched characters
+	ReplaceTextReplaceString_10="$1:"
+	# SELECT ONE OPTION BELOW, ONLY USE THESE TWO VALUES
+	ReplaceTextOperation_10="Copy_to_clipboard"
+	ReplaceTextOperation_10="Simulate_Typing"
+
+
+	ReplaceTextName_11="MAC with NO colons"
+	ReplaceTextDescription_11="MAC format replace, xx:xx:xx to xxxxx"
+	ReplaceTextLabel_11="ALPHA"
+	ReplaceTextRegExString_11="[:.\s\-]"
+	ReplaceTextReplaceString_11=""
+	ReplaceTextOperation_11="Copy_to_clipboard"
+```
+
