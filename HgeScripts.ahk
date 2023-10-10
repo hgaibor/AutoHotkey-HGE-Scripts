@@ -111,6 +111,7 @@ if (RunScriptAsAdmin = "yes")
 	}
 
 	Global MaxFolderSlots
+	Global MaxOpenCreateFolderAndFileInputs
 	
 
 ; VPN config variables, used inside functions and stuff:
@@ -800,7 +801,108 @@ ProcessSlotInputHook_End(){
 }
 ; END Functions to process input hooks, which are used by slot-based functions
 
+; BEGIN Functions to process dynamic input variables, will be used by several functions to process a list of inputs and replace them over a base string
+ProcessVariableInputString(MaxLoopCount, IniFileSection, IniFileKeyPreffix, IniFileKeySuffix, NameDescription, BaseString){
+	; <== {PLACEHOLDER VARIABLE ENABLED} ==>
+	; To keep maximum compatibility, IniFileKeyPreffix and IniFileKeySuffix will be used optionally, since there are INI file sections with the format
+	; Variable_numID  and also PROGRAM-Varaible (with no numeric ID)
+	; This function will receive loop count, an INI file section to go through variables, and then it will replace and sanitize the base string provided
+
+	; NameInput%a_index% will be MANDATORY, even if it does not contains any RegExDeleteFromInput or RegExInsertInput with values, 
+	; and EVEN if it use a special reserved word like DATE_NOW() or TIME_NOW().
+	; IniRead, MaxFolderSlots, %IniSettingsFilePath%, GeneralSettings, %IniFileKeyPreffix%-MaxFolderSlots
+
+	; MsgBox, %MaxLoopCount% ; [HGE] (DEBUG) Uncomment_for_tests
+	; MsgBox, %IniFileSection% ; [HGE] (DEBUG) Uncomment_for_tests
+	; MsgBox, %IniFileKeyPreffix% ; [HGE] (DEBUG) Uncomment_for_tests
+	; MsgBox, %IniFileKeySuffix% ; [HGE] (DEBUG) Uncomment_for_tests
+	; MsgBox, %BaseString% ; [HGE] (DEBUG) Uncomment_for_tests
+	SanitizedString := BaseString
+
+	Loop %MaxLoopCount%
+	{
+		; This function will take arguments from ini file, sequentially starting from 1, 
+		;  until it finds no continuous N argument or until %MaxLoopCount%
+		IniRead, NameInput%a_index%, %IniSettingsFilePath%, %IniFileSection%, %IniFileKeyPreffix%NameInput%a_index%%IniFileKeySuffix%
+		IniRead, RegExDeleteFromInput%a_index%, %IniSettingsFilePath%, %IniFileSection%, %IniFileKeyPreffix%RegExDeleteFromInput%a_index%%IniFileKeySuffix%
+		IniRead, RegExInsertInput%a_index%, %IniSettingsFilePath%, %IniFileSection%, %IniFileKeyPreffix%RegExInsertInput%a_index%%IniFileKeySuffix%
+		
+		; msgNameInput := NameInput%a_index% ; [HGE] (DEBUG) Uncomment_for_tests
+		; msgRegExDeleteFromInput := RegExDeleteFromInput%a_index% ; [HGE] (DEBUG) Uncomment_for_tests
+		; msgRegExInsertInput := RegExInsertInput%a_index% ; [HGE] (DEBUG) Uncomment_for_tests
+		; MsgBox, %msgNameInput% %msgRegExDeleteFromInput% %msgRegExInsertInput% ; [HGE] (DEBUG) Uncomment_for_tests
+
+		SanitizedString := ReplacePlaceholderStrings(SanitizedString)
+
+		if (NameInput%a_index% == "ERROR") 
+			break
+		
+		NameInput := % NameInput%a_index%
+		InputBox, VariableInput%a_index%, %WinEnvName%,Enter %NameInput% for %NameDescription%
+		if ErrorLevel
+				Return
+		
+		RegExCleanedInput%a_index% := % RegExReplace(VariableInput%a_index%, RegExDeleteFromInput%a_index%)
+		SanitizedString := RegExReplace(SanitizedString, RegExInsertInput%a_index%, RegExCleanedInput%a_index%)
+	}
+	; MsgBox, %SanitizedString% ; [HGE] (DEBUG) Uncomment_for_tests
+	return %SanitizedString%
+}
+
+
+ReplacePlaceholderStrings(BaseString){
+	; Function to dynamically generate values based on common AHK expressions, this will allow you to use these placeholders 
+	; at the ini file to set names based on AHk variables. 
+	; Note: Not all of these placeholders are standard AHK variables
+
+	SanitizedString := BaseString
+
+	; Custom placeholders not default for  AHK variables
+	FormatTime, FormattedVar, , yyyy-MM-dd
+	SanitizedString := StrReplace(SanitizedString, "{A_DATE_NOW}", FormattedVar)
+
+	FormatTime, FormattedVar, , HH.mm.ss
+	SanitizedString := StrReplace(SanitizedString, "{A_TIME_NOW}", FormattedVar)
+	
+	FormatTime, FormattedVar, , hh.mm.ss tt
+	SanitizedString := StrReplace(SanitizedString, "{A_12HourAM_PM}", FormattedVar)
+
+	FormatTime, FormattedVar, , YDay0
+	SanitizedString := StrReplace(SanitizedString, "{A_YDay0}", FormattedVar)
+
+	FormattedVar := SubStr(A_YWeek, -1)
+	SanitizedString := StrReplace(SanitizedString, "{A_Week_of_year}", FormattedVar)
+
+	; Placeholders for standard AHK variables
+	SanitizedString := StrReplace(SanitizedString, "{A_YYYY}", A_YYYY)
+	SanitizedString := StrReplace(SanitizedString, "{A_Year}", A_year)
+	SanitizedString := StrReplace(SanitizedString, "{A_MM}", A_MM)
+	SanitizedString := StrReplace(SanitizedString, "{A_Mon}", A_Mon)
+	SanitizedString := StrReplace(SanitizedString, "{A_DD}", A_DD)
+	SanitizedString := StrReplace(SanitizedString, "{A_MDay}", A_MDay)
+	SanitizedString := StrReplace(SanitizedString, "{A_MMMM}", A_MMMM)
+	SanitizedString := StrReplace(SanitizedString, "{A_MMM}", A_MMM)
+	SanitizedString := StrReplace(SanitizedString, "{A_DDDD}", A_DDDD)
+	SanitizedString := StrReplace(SanitizedString, "{A_DDD}", A_DDD)
+	SanitizedString := StrReplace(SanitizedString, "{A_WDay}", A_WDay)
+	SanitizedString := StrReplace(SanitizedString, "{A_YDay}", A_YDay)
+	SanitizedString := StrReplace(SanitizedString, "{A_YWeek}", A_YWeek)
+	SanitizedString := StrReplace(SanitizedString, "{A_Hour}", A_Hour)
+	SanitizedString := StrReplace(SanitizedString, "{A_Min}", A_Min)
+	SanitizedString := StrReplace(SanitizedString, "{A_Sec}", A_Sec)
+	SanitizedString := StrReplace(SanitizedString, "{A_MSec}", A_MSec)
+	SanitizedString := StrReplace(SanitizedString, "{A_Now}", A_Now)
+
+	; MsgBox %SanitizedString% ; [HGE] (DEBUG) Uncomment_for_tests
+	return SanitizedString
+}
+
+
+; END Functions to process dynamic input variables, will be used by several functions to process a list of inputs and replace them over a base string
+
+
 ProcessFolderSlot_X(IdOrLabel:=""){
+	; <== {PLACEHOLDER VARIABLE ENABLED} ==>
 	FolderSlotLabelFound := false
 	IniRead, MaxFolderSlots, %IniSettingsFilePath%, GeneralSettings, CreateOpenFolder_X-MaxFolderSlots
 	If (MaxFolderSlots == "ERROR")
@@ -849,7 +951,7 @@ ProcessFolderSlot_X(IdOrLabel:=""){
 	FolderSlot_IdOrLabel_DirectGoTo:
 	; END code to call slot directly is defined via hotkey
 
-  FolderSlot := Trim(FolderSlot)
+	FolderSlot := Trim(FolderSlot)
 	FolderSlotIndex := 
 
 	if (FolderSlot = "e"){
@@ -890,6 +992,7 @@ ProcessFolderSlot_X(IdOrLabel:=""){
 
 	if (FolderSlotSearchById)
 	{
+		FolderSlotID := FolderSlot
 		IniRead, BaseFolderPath, %IniSettingsFilePath%, CreateOpenFolder_X, BaseFolderPath_%FolderSlot%
 		IniRead, LocationName, %IniSettingsFilePath%, CreateOpenFolder_X, LocationName_%FolderSlot%
 		IniRead, FolderOperation, %IniSettingsFilePath%, CreateOpenFolder_X, FolderOperation_%FolderSlot%
@@ -909,6 +1012,9 @@ ProcessFolderSlot_X(IdOrLabel:=""){
 
 			if (FolderSlotLabel = FolderSlot)
 			{
+				FolderSlotID := A_Index
+				; MsgBox %FolderSlotID% ; [HGE] (DEBUG) Uncomment_for_tests
+
 				IniRead, BaseFolderPath, %IniSettingsFilePath%, CreateOpenFolder_X, BaseFolderPath_%FolderSlotIndex%
 				IniRead, LocationName, %IniSettingsFilePath%, CreateOpenFolder_X, LocationName_%FolderSlotIndex%
 				IniRead, FolderOperation, %IniSettingsFilePath%, CreateOpenFolder_X, FolderOperation_%FolderSlotIndex%
@@ -929,6 +1035,8 @@ ProcessFolderSlot_X(IdOrLabel:=""){
 	return
 	
 	ProcessFolderSlot_X_ValidateData:
+		FolderString := ""
+		FileNameString := ""
 		If ((BaseFolderPath == "ERROR"))
 		{
 			MsgBox, ERROR... SLOT "%FolderSlot%" base folder path not defined, check the "%IniSettingsFileName%" file under `n[CreateOpenFolder_X] --> BaseFolderPath_xx
@@ -956,8 +1064,25 @@ ProcessFolderSlot_X(IdOrLabel:=""){
 		{
 			FolderOperation := "Open_Folder"
 		}
+		else if (FolderOperation =="Open_Create_Folder_And_File")
+		{
+			; MsgBox, CREATING FILE AND FOLDER ; [HGE] (DEBUG) Uncomment_for_tests
+
+			IniRead, MaxOpenCreateFolderAndFileInputs, %IniSettingsFilePath%, GeneralSettings, CreateOpenFolder_X-MaxOpenCreateFolderAndFileInputs
+			If (MaxOpenCreateFolderAndFileInputs == "ERROR")
+			{
+				MaxOpenCreateFolderAndFileInputs := 10
+			}
+
+			IniRead, VariableFolderPath, %IniSettingsFilePath%, CreateOpenFolder_X, Folder-VariableFolderPath_%FolderSlotID%
+			IniRead, VariableFileName, %IniSettingsFilePath%, CreateOpenFolder_X, File-CreateWithName_%FolderSlotID%
+
+			FolderString := ProcessVariableInputString(MaxOpenCreateFolderAndFileInputs, "CreateOpenFolder_X", "Folder-", "_"FolderSlotID, LocationName, VariableFolderPath)
+			FileNameString := ProcessVariableInputString(MaxOpenCreateFolderAndFileInputs, "CreateOpenFolder_X", "File-", "_"FolderSlotID, LocationName, VariableFileName)
+
+		}
 		
-		CreateOpenFolder(BaseFolderPath, LocationName, FolderOperation)
+		CreateOpenFolder(BaseFolderPath, LocationName, FolderOperation, FolderString, FileNameString, FolderSlotID)
 	; Label safe exit point: ProcessFolderSlot_X_ValidateData
 	return
 }
@@ -1051,138 +1176,251 @@ ProcessFolderSlot(){
 }
 
 
-CreateOpenFolder(BaseFolderPath, LocationName, FolderOperation){
-	; IniRead, BaseFolderPath, %IniSettingsFilePath%, CreateOpenFolder, BaseFolderPath
-	StringRight, CheckFolderPath, BaseFolderPath, 1
-	; MsgBox, %CheckFolderPath% ; [HGE] (DEBUG) Uncomment_for_tests
+CreateOpenFolder(BaseFolderPath, LocationName, FolderOperation, Folder_VariableFolderPath:="", File_CreateWithName:="", FolderSlotID:=""){
+	VariableFolderPath_StartChar := ""
+	VariableFolderPath_EndChar := ""
 
+	Folder_VariableFolderPath := Trim(Folder_VariableFolderPath)
+	File_CreateWithName := Trim(File_CreateWithName)
+
+	BaseFolderPath_EndChar := SubStr(BaseFolderPath, 0)
+	if (BaseFolderPath_EndChar=="\")
+		BaseFolderPath := SubStr(BaseFolderPath, 1, -1)
+	; MsgBox %BaseFolderPath% ; [HGE] (DEBUG) Uncomment_for_tests
+
+
+	if (Folder_VariableFolderPath<>"")
+	{
+		; Getting first and last characters from the VariableFolderPath to validate single \ will be always present
+		VariableFolderPath_StartChar := SubStr(Folder_VariableFolderPath, 1, 1)
+		VariableFolderPath_EndChar := SubStr(Folder_VariableFolderPath, 0)
+
+		; Since BaseFolderPath will contain leading \ we will remove this one in case it matches
+		if (VariableFolderPath_StartChar=="\")
+			Folder_VariableFolderPath := SubStr(Folder_VariableFolderPath, 2)
+
+		if (VariableFolderPath_EndChar=="\")
+			Folder_VariableFolderPath := SubStr(Folder_VariableFolderPath, 1, -1)
+		
+		; MsgBox, %Folder_VariableFolderPath% ; [HGE] (DEBUG) Uncomment_for_tests
+	}
+
+	if (File_CreateWithName<>"")
+	{	
+		; Getting first and last characters from the VariableFolderPath to validate single \ will be always present
+		CheckFile_CreateWithName_StartChar := SubStr(File_CreateWithName, 1, 1)
+		CheckFile_CreateWithName_EndChar := SubStr(File_CreateWithName, 0)
+
+		; Since BaseFolderPath will contain leading \ we will remove this one in case it matches
+		if (CheckFile_CreateWithName_StartChar=="\")
+			File_CreateWithName := SubStr(File_CreateWithName, 2)
+
+		if (CheckFile_CreateWithName_EndChar=="\")
+			File_CreateWithName := SubStr(File_CreateWithName, 1, -1)
+		
+		; MsgBox, %File_CreateWithName% ; [HGE] (DEBUG) Uncomment_for_tests
+	}
 
 	if (FolderOperation =="Open_Create")
 	{
 		InputBox, FolderName, %WinEnvName%Enter name for %LocationName%, Folder will be created or opened`, if it does not exist it will be created at `n`n %BaseFolderPath%
-		if (CheckFolderPath<>"\")
-		{
-			BaseFolderPath = %BaseFolderPath%\
-			; MsgBox, %BaseFolderPath% ; [HGE] (DEBUG) Uncomment_for_tests
-		}
+		if ErrorLevel
+			return 
+
+		FolderName := Trim(FolderName)
+
+		if (FolderName=="")
+			return 
+
+		FolderFullPath = %BaseFolderPath%\%FolderName%
+
+
+		; if (BaseFolderPath_EndChar<>"\")
+			; BaseFolderPath = %BaseFolderPath%\
+
 	}
 	else if (FolderOperation =="Open_Folder")
 	{
-		; MsgBox, OPEN FOLDER ONLY ; [HGE] (DEBUG) Uncomment_for_tests
-
-		if (CheckFolderPath=="\")
-			{
-				; Extract the base folder path to open folder (last backslash not needed here)
-				StringTrimRight, BaseFolderPath, BaseFolderPath, 1
-				; MsgBox, %BaseFolderPath% ; [HGE] (DEBUG) Uncomment_for_tests
-
-			}
-			; Break path into array by backslash character 
-			PathArray := StrSplit(BaseFolderPath, "\")
-			FolderName := PathArray[(PathArray.MaxIndex())]
-			; MsgBox, %FolderName% ; [HGE] (DEBUG) Uncomment_for_tests
-
-		; MsgBox, %FolderName% ; [HGE] (DEBUG) Uncomment_for_tests
+		PathArray := StrSplit(BaseFolderPath, "\")
+		FolderName := PathArray[(PathArray.MaxIndex())]
+		FolderFullPath = %BaseFolderPath%
 		ErrorLevel := false 
+
+		; MsgBox, OPEN FOLDER ONLY ; [HGE] (DEBUG) Uncomment_for_tests
+		; if (BaseFolderPath_EndChar=="\")
+		; {
+		; 	BaseFolderPath := SubStr(BaseFolderPath, 1, -1)
+		; MsgBox, END CHAR BAD %BaseFolderPath% ; [HGE] (DEBUG) Uncomment_for_tests
+
+		; }
+			; Extract the base folder path to open folder (last backslash not needed here)
+
+		; Break path into array by backslash character 
+		; MsgBox, Folder name %FolderName% ; [HGE] (DEBUG) Uncomment_for_tests
+		; MsgBox, Full path %FolderFullPath% ; [HGE] (DEBUG) Uncomment_for_tests
 	}
 
-	if ErrorLevel
-	{		
-		; MsgBox, "ErrorLevel due to cancel" ; [HGE] (DEBUG) Uncomment_for_tests
-		Return
-	}
-
-	else
-		{
-		if ((Trim(FolderName) == "") && (FolderOperation <> "Open_Folder") )
-		{
-			; MsgBox, FOLDER NOT EMPTY ; [HGE] (DEBUG) Uncomment_for_tests
-			Return 
-		}
-
-		else if (FolderOperation == "Open_Folder")
-		{
-			; MsgBox, OPEN FOLDER ONLY ; [HGE] (DEBUG) Uncomment_for_tests
-			FolderFullPath := BaseFolderPath
-		}
-
-		else if (FolderOperation == "Open_Create")
-		{
-			; MsgBox, OPEN CREATE FOLDER ; [HGE] (DEBUG) Uncomment_for_tests
-			FolderFullPath := BaseFolderPath (Trim(FolderName))
-		}
-
-		else 
-		{
-			; MsgBox, ELSE_MET ; [HGE] (DEBUG) Uncomment_for_tests
-		}
-		; MsgBox, %FolderFullPath% ; [HGE] (DEBUG) Uncomment_for_tests
-		; MsgBox, %FolderName% ; [HGE] (DEBUG) Uncomment_for_tests
+	else if (FolderOperation =="Open_Create_Folder_And_File")
+	{
+		if (Folder_VariableFolderPath<>"")
+			TempFolderFullPath = %BaseFolderPath%\%Folder_VariableFolderPath%
+		; 		BaseFolderPath = %BaseFolderPath%\
+		else
+			TempFolderFullPath = %BaseFolderPath%
 		
-		if InStr(FileExist(FolderFullPath), "D")
-		{
-			; MsgBox, Directory exists
-			; WinShow, FolderName
-			; GroupAdd, GroupName, WinTitle [, WinText, Label, ExcludeTitle, ExcludeText]
-			; GroupAdd, TicketExplorer, FolderName
+		PathArray := StrSplit(TempFolderFullPath, "\")
+		FolderName := PathArray[(PathArray.MaxIndex())]
+		; Need to define FolderFullPath without leading \ to allow to create directories and paths
+		FolderFullPath = %TempFolderFullPath%
+		ErrorLevel := false 
 
-			
-			; Copy text to Clipboard
-			clipboard = %FolderFullPath%
-			; SetTitleMatchMode, 2
-			WinWait ,%FolderName% ahk_exe explorer.exe, , 0.5 ; test 1 
-			; If WinExist("ahk_exe explorer.exe " FolderName) ; OK code
-			If !ErrorLevel ; test 1
+		; MsgBox, Base folder path: %FolderFullPath% ; [HGE] (DEBUG) Uncomment_for_tests
+		; return 
+
+		; MsgBox, temp folder path %TempFolderFullPath% ; [HGE] (DEBUG) Uncomment_for_tests
+		; MsgBox, Folder name %FolderName% ; [HGE] (DEBUG) Uncomment_for_tests
+		; MsgBox, Full folder path %FolderFullPath% ; [HGE] (DEBUG) Uncomment_for_tests
+		; {
+
+		; }
+		; return ; test 2
+		; MsgBox, Base folder path: %BaseFolderPath% ; [HGE] (DEBUG) Uncomment_for_tests
+		; MsgBox, Variable folder path: %Folder_VariableFolderPath% ; [HGE] (DEBUG) Uncomment_for_tests
+		; MsgBox, File name: %File_CreateWithName% ; [HGE] (DEBUG) Uncomment_for_tests
+		
+		; MsgBox, Full folder path: %FolderFullPath% ; [HGE] (DEBUG) Uncomment_for_tests
+		; TEST RETURN!!
+	}
+	
+	; ABORT all below operations if user canceled input
+
+	if InStr(FileExist(FolderFullPath), "D")
+	{
+		; MsgBox, Directory exists ; [HGE] (DEBUG) Uncomment_for_tests
+		; Copy text to Clipboard
+		clipboard = %FolderFullPath%
+		; SetTitleMatchMode, 2
+		WinWait ,%FolderName% ahk_exe explorer.exe, , 0.5 
+		If !ErrorLevel ; test 1
+		{
+			; MsgBox, Window exists ; [HGE] (DEBUG) Uncomment_for_tests
+			WinActivate
+			if (FolderOperation == "Open_Create_Folder_And_File")
 			{
-				; MsgBox, Window exists
-				WinActivate
-				; WinActivate, %FolderName%
-				; MsgBox, test win activate ; [HGE] (DEBUG) Uncomment_for_tests
+				CheckCreateOpenFile(FolderFullPath, File_CreateWithName, LocationName, false,  false, FolderSlotID)
 			}
-			else
+			; MsgBox, test win activate ; [HGE] (DEBUG) Uncomment_for_tests
+		}
+		else
+		{
+			if (FolderOperation == "Open_Folder")
 			{
-				; MsgBox, test
-				if (FolderOperation == "Open_Folder")
+				MsgBox, 36, %WinEnvName%Open Folder, Open %FolderFullPath%?`nNo window with that title found, open? 
+				IfMsgBox Yes
 				{
-					MsgBox, 36, %WinEnvName%Open Folder, Open %FolderFullPath%?`nNo window with that title found, open? 
-					IfMsgBox Yes
-					{
-						; Work-around not to run tasks as administrator since the Script itself needs to be run like that for other tasks 
-						; WARNING: RunWithNoElevation() may trigger alerts on some Antivirus software flagging it as:
-						; 	- Trojan.Multi.GenAutorunTask.b
-						; 	- PDM:Trojan.Win32.GenAutorunSchedulerTaskRun.b
-						; This is due to the function using svchost.exe to "program" the task to start the desired application or process.
-						; RunWithNoElevation("explorer.exe",FolderFullPath, A_WinDir)
-						; Run, explorer.exe "%FolderFullPath%"
-						Run, explorer.exe "%FolderFullPath%"
-					}
-				}
-				else if (FolderOperation == "Open_Create")
-				{
-					; Since already asked for the folder name makes sense to open automatically 
-					; MsgBox, Opening requested window ; [HGE] (DEBUG) Uncomment_for_tests
+					; NOTE: Check RunWithNoElevation() warnings if this ever gets implemented
+					; RunWithNoElevation("explorer.exe",FolderFullPath, A_WinDir)
 					Run, explorer.exe "%FolderFullPath%"
 				}
 			}
-
-		}
-		else if (FolderOperation == "Open_Create")
-		{
-			; Message box options:
-			; Yes/No	--> 4 
-			; Icon Question	--> 32
-			MsgBox, 36, %WinEnvName%Create new directory?, Directory %FolderName% does not exists at `n%BaseFolderPath% `nCreate new? 
-			IfMsgBox Yes
+			else if (FolderOperation == "Open_Create")
 			{
-				FileCreateDir, %FolderFullPath%
+				; Since already asked for the folder name makes sense to open automatically 
+				; MsgBox, Opening requested window ; [HGE] (DEBUG) Uncomment_for_tests
 				Run, explorer.exe "%FolderFullPath%"
-				; Copy text to Clipboard
-				clipboard = %FolderFullPath%
 			}
-			; else
-					; MsgBox Nope
+			else if (FolderOperation == "Open_Create_Folder_And_File")
+			{
+				; Since already asked for the folder name makes sense to open automatically 
+				; MsgBox, Opening requested window ; [HGE] (DEBUG) Uncomment_for_tests
+				Run, explorer.exe "%FolderFullPath%"
+				Sleep, 1200
+				CheckCreateOpenFile(FolderFullPath, File_CreateWithName, LocationName, false,  false, FolderSlotID)
+
+			}
 		}
+	}
+	else if (FolderOperation == "Open_Create")
+	{
+		; Message box options:
+		; Yes/No	--> 4 
+		; Icon Question	--> 32
+		; InputBox, FolderName, %WinEnvName%Enter name for %LocationName%, Folder will be created or opened`, if it does not exist it will be created at `n`n %BaseFolderPath%
+		; IfMsgBox Yes
+		; {
+			FileCreateDir, %FolderFullPath%
+			Run, explorer.exe "%FolderFullPath%"
+			; Copy text to Clipboard
+			clipboard = %FolderFullPath%
+		; }
+	}
+
+	else if (FolderOperation == "Open_Create_Folder_And_File")
+	{
+		MsgBox, 36, %WinEnvName%Create new directory?, Directory path does not exists: `n%FolderFullPath% `n`nAlso new file '%File_CreateWithName%' will be created`nProceed? 
+		IfMsgBox Yes
+		{
+			FileCreateDir, %FolderFullPath%
+			Run, explorer.exe "%FolderFullPath%"
+			; Copy text to Clipboard
+			clipboard = %FolderFullPath%
+			Sleep, 1200
+			CheckCreateOpenFile(FolderFullPath, File_CreateWithName, LocationName, false,  false, FolderSlotID)
 		}
+	}
+}
+
+
+CheckCreateOpenFile(FolderPath, CreatedFileName, LocationName:="", ConfirmFileCreation:=false,  ConfirmFileOpening:=false, FolderSlotID:=""){
+	FullFileName = %FolderPath%\%CreatedFileName%
+
+	if (LocationName=="")
+		LocationName := "No name"
+
+	if (FileExist(FullFileName))
+	{
+		if (ConfirmFileOpening)
+		{
+			MsgBox, 36, %WinEnvName%Open file?, %CreatedFileName% already exists at: `n%FolderPath% `nProceed? 
+			IfMsgBox No
+				Return 
+		}
+	}
+	else
+	{
+		if (ConfirmFileCreation)
+		{
+			MsgBox, 36, %WinEnvName%Create new file?, %CreatedFileName% does not exists at: `n%FolderPath% `nProceed? 
+			IfMsgBox No
+				Return 
+		}
+
+		FileContents := ""
+		Loop
+		{
+			; This function will take arguments from ini file, sequentially starting from 1, File-CreateWithContents{loop_index}_{FolderSlotID}
+			;  until it finds no continuous N argument
+			IniRead, FileCurrentLine, %IniSettingsFilePath%, CreateOpenFolder_X, File-CreateWithContents%a_index%_%FolderSlotID%
+			if (FileCurrentLine == "ERROR") 
+				break
+			
+			FileCurrentLine := StrReplace(FileCurrentLine, "\n", "`n")
+			FileCurrentLine := ReplacePlaceholderStrings(FileCurrentLine)
+			FileCurrentLine := FileCurrentLine "`n"
+			FileContents := FileContents FileCurrentLine
+		}
+
+		FileAppend, %FileContents%, %FullFileName%
+
+		if (ConfirmFileOpening)
+		{
+			MsgBox, 36, %WinEnvName%Open created file?, %CreatedFileName% was created at: `n%FolderPath% `nProceed? 
+			IfMsgBox No
+				Return
+		}
+	}
+
+	Run, %FullFileName%
 }
 
 

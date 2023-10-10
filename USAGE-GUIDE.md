@@ -1,6 +1,6 @@
 HgeScripts .ini file guide
 ==========================
-The purpose of this AHK script is to automate common tasks as much as possibe, in a simple way (once you set your *ini* file properly, that is).
+The purpose of this AHK script is to automate common tasks as much as possible, in a simple way (once you set your *ini* file properly, that is).
 Despite that goal, initial setup may be complex for some, at least at the beginning. 
 
 This guide will separate explaining from base example.ini file in order to make it as clear and as detailed as possible, with easy-to-read markdown formatting. 
@@ -11,6 +11,36 @@ Code will be put in blocks, so after reading the explaining, you can copy-paste 
 Additional functions
 -------------------------
 Some short functions that provide useful functionality are defined on the `ahk_hotkeys` file directly, please refer to the `HgeScripts.ahk_hotkeys.example.txt` file to see these small functions that are right below the AHK shortcut. 
+
+## Script-Wide special placeholder variables
+With the purpose of adding more flexibility and reduce `.ini` file parameter modification, dynamic variables have been define which can be used on the .ini files, the script will replace these special placeholder variables with the values they represent, allowing functions to be even more versatile! 
+
+**Note:** Dynamic placeholder variables is a relatively implementation on this AHK script, so not all functions are yet refactored to make use of them. Once a function or their respective set of ini parameters accept dynamic placeholders, it will contain the wording `; <== {PLACEHOLDER VARIABLE ENABLED} ==>`
+### List of custom placeholder variables
+These variables are named similarly to the AHK standard ones, to keep consistency among them, newer script updates may include more variables to improve parameter reuse among ini files. 
+- `{A_Week_of_year}` Week of the year, equals A_Week_of_year := SubStr(A_YWeek, -1). According to AHK: If the week containing January 1st has four or more days in the new year, A_YWeek is considered week 1. Otherwise, A_YWeek is the last week of the previous year, and the next week is week 1.
+- `{A_DATE_NOW}` --> Current date formatted like YYYY-MM-DD
+- `{A_TIME_NOW}` --> Current 2-digit HH.mm.ss (00-23) in 24-hour time (for example, 17:00:01), since this will be used for file creation, : was replaced by a dot .
+- `{A_12HourAM_PM}` --> Current 2-digit HH.mm.ss (00-12) in 12-hour time (for example, 05:00:01 pm). Since this may be used for file creation, : was replaced by a dot .
+- `{A_YDay0}` --> A_YDay value but zero-padded, e.g. 9 is retrieved as 009.
+### List of AHK-equivalent placeholder variables
+For more information of how AutohotKey treats these variables refer to this link: https://www.autohotkey.com/docs/v1/Variables.htm#date
+- `{A_YYYY}` or `{A_Year}` --> Current 4-digit year (e.g. 2004)
+- `{A_MM}` or `{A_Mon}` --> Current 2-digit month (01-12)
+- `{A_DD}` or `{A_MDay}` --> Current 2-digit day of the month (01-31)
+- `{A_MMMM}` --> Current month's full name in the current user's language, e.g. July
+- `{A_MMM}` --> Current month's abbreviation in the current user's language, e.g. Jul
+- `{A_DDDD}` --> Current day of the week's full name in the current user's language, e.g. Sunday
+- `{A_DDD}` --> Current day of the week's abbreviation in the current user's language, e.g. Sun
+- `{A_WDay}` --> Current 1-digit day of the week (1-7). 1 is Sunday in all locales.
+- `{A_YDay}` --> Current day of the year (1-366) withoud zero-padding. 
+- `{A_YWeek}` --> Current year and week number (e.g. 200453) according to ISO 8601.
+- `{A_Hour}` --> Current 2-digit hour (00-23) in 24-hour time (for example, 17 is 5pm).
+- `{A_Min}` Current 2-digit minute (00-59).
+- `{A_Sec}` --> Current 2-digit second (00-59).
+- `{A_MSec}` --> Current 3-digit millisecond (000-999). To remove the leading zeros, follow this example: Milliseconds := A_MSec + 0.
+- `{A_Now}` --> The current local time in YYYYMMDDHH24MISS format.
+
 
 
 [GeneralSettings] section
@@ -39,7 +69,9 @@ NO RELATED FUNCTION DIRECTLY CALLED
 	BrowsersProfiles-MaxBrowserArguments="10"
 	ShowOpenWebSiteWithInput-MaxOpenWebSiteInputs="10"
 	CreateOpenFolder_X-MaxFolderSlots=100
-
+	CreateOpenFolder_X-MaxOpenCreateFolderAndFileInputs="10"
+	RegExReplaceText_X-MaxReplaceTextSlots=100
+	BrowsersProfile-DefaultProfile="Hge"
 ```
 
 
@@ -79,7 +111,7 @@ Current function accepts one definition
 Section to define browsers profiles that will be used by `[ShowOrRunWebSite]` and `[ShowOpenWebSiteWithInput]` sections/fucntions to reduce repetitive code. 
 `New window` and `new tag` arguments are saved on specific variables to allow more flexibility among different browsers
 
-Define different profiles by changing the first part of the name, before the - character, **DO NOT delete the rest of the variable name**
+Define different profiles by changing the first part of the name, before the `-` character, **Remove [] brackets and DO NOT delete the rest of the variable name**
 
 ### Variables description
 - **[Default]-DefinedBrowserExe=** (Required) --> Executable file path for your browser, like `C:\Program Files\Google\Chrome\Application\chrome.exe`
@@ -139,6 +171,8 @@ This section and the associated function will be left for legacy, and maybe simp
 `ProcessFolderSlot()` script function will wait for a single digit key press defining the slot to use, then it will call `CreateOpenFolder()` function to open predefined folder paths or create new folder inside of them.
 No need to create each of the 10 slots, however be sure to fill the three required variables when creating a slot.
 
+**Update:** This function is deprecated and remains for legacy usage, use the [CreateOpenFolder_X] function that is defined later on this guide.
+
 **Limitations of this function**
 	- Current function supports ten slots with a single digit [0-9]
 	- No label to identify and folder slot easily (which `CreateOpenFolder_X` will do)
@@ -185,7 +219,9 @@ You may assign one or more calls to the same function with different key mapping
 
 [ShowOrRunProgram] section
 -------------------------
-Variables listed here will be used by the function `ShowOrRunProgram("PogramID")` on the `.ahk` script. PogramID can be any string, remove the brackets and make it unique to be able to map as many programs as you need to tie to key shortcuts
+Variables listed here will be used by the function `ShowOrRunProgram("PogramID")` on the `.ahk` script. PogramID can be any string, remove the brackets and make it unique to be able to map as many programs as you need to tie to key shortcuts. 
+
+You can also specify a full document or file path to open a specific file under the OS default defined program for that file extension. Hotkey will focus this program based on the `AhkExeName` criteria defined. 
 
 ### Variables description
 - **[ProgramID]-AhkExeName=**"" --> Program identifier, use the included `ActiveWindowInfo.ahk` script found on the AutoHotkey folder to get information of an opened window app, or refer to https://www.autohotkey.com/docs/misc/WinTitle.htm for further info.
@@ -205,6 +241,7 @@ Create one or more entries on the `.ahk_hotkeys` file. You can create one or mor
 
 
 ### Code example
+Use `##` or `;` for comments on ini files 
 ```
 	notepad-AhkExeName="ahk_exe notepad.exe"
 	notepad-AhkGroupName="NotepadInstances"
@@ -226,9 +263,10 @@ Create one or more entries on the `.ahk_hotkeys` file. You can create one or mor
 ```
 
 
+
 [ShowOrRunWebSite] section
 -------------------------
-UPDATE: This function will get deprecated, and is being replaced by the `ShowOpenWebSiteWithInput()` function and sections. 
+**UPDATE:** This function will get deprecated, and is being replaced by the `ShowOpenWebSiteWithInput()` function and sections. 
 Eventually this function and its related documentation will get removed from this guide.
 
 Variables listed here will be used by the function `ShowOrRunWebSite("WebSiteID")` on the `.ahk` script. Similar to `ShowOrRunProgram()`, however it adds functionality to set different arguments for the web browser.
@@ -376,21 +414,22 @@ Use this to parse a phone number into WhatsApp send message URL, then copy it to
 
 [CreateOpenFolder_X] section
 -------------------------
-New implementation derived from `CreateOpenFolder` function, which will allow for an unlimited number of folder slots definition. Associated to `ProcessFolderSlot_X()` at ahk script.
-Given the number of slots that can now be created, remembering the defined folder slots by numeric IDs will be a difficult task; so this function will allow to load folders definitions based on a short, easy to type label of your preference. 
-Label can have a maximum length of 30 characters, and include letters, numbers, spaces, and some special characters. There is no validation on which special characters can be entered, but the recommended approach is to stick to most common ones like dashes, hyphens and such.
+<== {PLACEHOLDER VARIABLE ENABLED} ==>
+New implementation derived from `CreateOpenFolder()` function, which will allow for an unlimited number of folder slots definition. Associated to `ProcessFolderSlot_X()` at ahk script.
+
+Given the number of slots that can now be created, remembering the defined folder slots by numeric IDs will be a difficult task; so this function will allow to load folders definitions based on a short, easy to type *label* of your preference.  A *label* can have a maximum length of 30 characters, and include letters, numbers, spaces, and some special characters. There is no validation on which special characters can be entered, but the recommended approach is to stick to most common ones like dashes, hyphens and such.
 
 Pressing the hotkey that calls this function will show a tooltip next to the mouse cursor, where the entered text will be displayed. Once you enter desired ID or label, press [enter], [space], or [tab] keys to confirm the search criteria. 
 
-NEW: Optionally you can create a hotkey shortcut with the ID or label to call a specific slot directly, like this: `ProcessFolderSlot_X(numeric_ID)` or with the label, `ProcessFolderSlot_X("Label")`
+**NEW:** Optionally you can create a hotkey shortcut with the ID or label to call a specific slot directly, like this: `ProcessFolderSlot_X(numeric_ID)` or with the label, `ProcessFolderSlot_X("Label")`
 
+NEW: Additional operation mode `Open_Create_Folder_And_File` was created and new custom parameters will allow to create a file inside the folder
 
 If you enter a number as the first character, it will trigger the `Search by id` mode, which will load the folder slot data from the definition that has the same numeric ID as entered. If no ID exists on the `.ini` file, it will show an error message. 
 
 If you enter letters or special characters first, it will perform the search based on `label`. This mode will allow [space] to be entered as part of the search criteria, so confirm desired text with either [enter] or [tab].
 
-**Important:** IDs on this function do not need to be continuous, in other words, you can create a group of folder slots with `_10,_11,_12`, other one starting at `_20,_21,_22`, and another one at te 30's range without affecting the searching loop, **as long as** you increase the value of the parameter `CreateOpenFolder_X-MaxFolderSlots=` to be equal or higher than the max numeric ID that you create among all groups. This parameter is present at the `[GeneralSettings]` section.
-
+**Important:** IDs on this function do not need to be continuous, but they need to start with a number greater than 0, in other words, you can create a group of folder slots with `_10,_11,_12`, other one starting at `_20,_21,_22`, and another one at te 30's range without affecting the searching loop, **as long as** you increase the value of the parameter `CreateOpenFolder_X-MaxFolderSlots=` to be equal or higher than the max numeric ID that you create among all groups. This parameter is present at the `[GeneralSettings]` section.
 
 
 ### Variables description
@@ -403,11 +442,68 @@ Replace `XXXX` with the ID that you need, just make sure it's unique among the r
 	  No validation against invalid characters is made, so BE WARNED
 	- *Open_Folder*: Will open the path defined on the current slot, or if there's an already opened explorer window, it will bring it to the front.
 
+#### Variables used under `Open_Create_Folder_And_File` mode
+In addition to the .ini file parameters used above, this mode will allow you to request as many input fields as required and place them in placeholder variables to create more flexible file names and paths as desired. 
+
+Before listing all the possible variables, we'll describe the **NEW: variable input parameters** approach for this operation mode, this may be implemented on other functions as well. 
+
+For now, the `Open_Create_Folder_And_File` mode will allow you to request any number of inputs to assign them to placeholder values on the *VariableFolderPath_XXXX* or the filename to be used. 
+
+Dynamic input parameters will use the following parameters, the three of them need to be created altogether for each input you need to request:
+  1. Request the inputs named with the `ZZZZZZ-NameInputY_XXXX` parameter
+  2. Then perform a RegEX deletion rule determined by `ZZZZZZ-RegExDeleteFromInputY_XXXX` 
+  3. And finally insert the sanitized text based on the RegEx insertion rule set up by `ZZZZZZ-RegExInsertInputY_XXXX` which is the rule to replace the {Placeholder_X} variable or variables on the *VariableFolderPath_XXXX* parameter
+
+On the three parameters mentioned above, the **NameInput**, **RegExDeleteFromInput**, and **RegExInsertInput** text need to remain equal on every input, to keep compliance with the logic of the AHK script. The variable portions of the names are described by the following parts: 
+- **ZZZZZ-** is the `Folder-` or `File-` prefix to tell the script to parse the input and their rules for the folder path or filename parts. 
+- **Y** is a sequential integer number that the script will use for the loop. It needs to begin in 1 and you can create as many continuous entries for each input that you need. Just remember that the three parameters **NameInput**, **RegExDeleteFromInput**, and **RegExInsertInput** need to have the same number for the script logic to work. 
+- **\_XXXX** is the *FolderSlotID* that `CreateOpenFolder_X` uses to differentiate each slot.
+
+If no inputs are needed, don't declare any of the following three parameters listed above, but if you need to request an input, create a new set of the three parameters above replacing the `Y` before `_XXXX` by 1, 2, 3, 4 and so on.
+
+In this example we'll be using `"{REPLACE_INPUT1}"` as the *VariablePath* placeholder and the RegEx rule `"i)\{REPLACE_INPUT1\}"` which will replace the placeholder with the requested input. The `i)` is AutoHotkey way to tell RegEx to be case insensitive, the rest is perl-base RegEx
+
+For convenience we use `{REPLACE_INPUTxxx}` but as long as you keep your RegExs in check, you can use virtually any place holders, just make sure you set different placeholders for the different inputs that you create. 
+
+**The variables needed are listed below**
+- **Folder-VariableFolderPath_XXXX=** --> Add the rest of the path on this parameter, you can use special placeholders like `{REPLACE_INPUT1}` to generate more dynamic folder paths, the script will create all the parent directories that are needed by the combination of the *BaseFolderPath_XXXX* parameter and this *Folder-VariableFolderPath_XXXX* folder path parameter
+- **Folder-NameInput1_XXXX=** --> Name that the input field will show when requested. If you need that the script requests additional inputs, create another entry and replace the 1 before the `_XXXX` by 2, and so on.
+- **Folder-RegExDeleteFromInput1_XXXX=** --> May be empty, but parameter line needs to be present. 
+  Perl-based RegEx rule to delete unwanted characters from the input, for example, you paste a text in the input field with a format like 123-456-7890 but you need only the numbers, this rule can take care of that for you, optimizing your input time. 
+  This parameter is tied to the NameInput1 above, so if you create a 2nd input, create a new line like this one replacing the 1_ before `_XXXX` by 2. Also remember that `_XXXX` belongs to the **numeric ID** of the FolderSlot
+- **Folder-RegExInsertInput1_XXXX=** --> This Perl-based RegEx rule will tell the script where to place the entered input along the Folder-VariableFolderPath. 
+  This parameter is tied to the NameInput1 above as well.
+
+Similar to **Folder-** dynamic inputs, you can request inputs to use for the filename under the `Open_Create_Folder_And_File` mode. Just use the `File-` prefix to tell the AHK script that this part will be used for the filename portion. These parameters follow the same logic of they **Folder-** counterparts
+- **File-CreateWithName_XXXX=** --> Name of the created file, it can be a fixed name or you can place dynamic placeholders like `{REPLACE_INPUT1}` and request inputs similarly to the folder path variables above.
+
+- **File-NameInput1_XXXX=** --> Name that the input field will show when requested. Works similar to the *Folder-* counterpart.
+- **File-RegExDeleteFromInput1_XXXX=** --> May be empty. , but parameter line needs to be present. 
+  Perl-based RegEx rule to delete unwanted characters from the input, or insert them, optimizing your input time. This parameter is tied to the NameInput1 above. Remember that `_XXXX` belongs to the numeric ID of the FolderSlot
+- **File-RegExInsertInput1_XXXX=** --> This Perl-based RegEx rule will tell the script where to place the entered input along the `File-CreateWithName`. 
+
+**Optional base file content adding**
+You can also add some base content to the file at the moment ot its creation. Similarly to the looped index values above, you can create as many lines as needed, as long as they have a continuous numeric sequence. Each parameter line will insert a line break, however you can place additional line breaks within each parameter by using the placeholder `\n`.  Markdown will treat single backslash like invisible character, but the `.ini` file won't so please use one.
+Also special placeholders can be used, they will be detailed at the [Script-Wide special placeholder variables] section on the USAGE-GUIDE document 
+- **File-CreateWithContents1_XXXX=** --> "File created at: {A_DATE_NOW}"
+- **File-CreateWithContents2_XXXX=** --> "# CASE: "
+- **File-CreateWithContents3_XXXX=** --> ""
+- **File-CreateWithContents4_XXXX=** --> "Document ID:"
+- **File-CreateWithContents5_XXXX=** --> "Credits:"
+- **File-CreateWithContents6_XXXX=** --> "Public name:"
+- **File-CreateWithContents7_XXXX=** --> "\n\n\n"
+- **File-CreateWithContents8_XXXX=** --> "Other info:"
+- **File-CreateWithContents9_XXXX=** --> ""
+
 ### AHK related function shortcut example
 Create one entry on the `.ahk_hotkeys` file. 
 You may assign one or more calls to the same function with different key mapping, however the different folder definitions are created on the `.ini` file
 ```
-	+#e::ProcessFolderSlot_X() ; NEW, Mega, unlimited folder slots implementation ^_^
++#e::ProcessFolderSlot_X()
+; Label direct call for folderSlot
++#e::ProcessFolderSlot_X("SNG")
+; Numeric ID direct call for folderSlot
++#e::ProcessFolderSlot(11)
 ```
 
 
@@ -436,6 +532,61 @@ You may assign one or more calls to the same function with different key mapping
 	FolderOperation_25="Open_Folder"
 ```
 
+
+### Code example with new `Open_Create_Folder_And_File` mode
+```
+[CreateOpenFolder_X]
+	BaseFolderPath_1="C:\Documents"
+	LocationName_1="Personal documents folder"
+	FolderLabel_1="docs"
+	FolderOperation_1="Open_Create_Folder_And_File"
+	
+; This convention may be a little different, create as many inputs as needed in the following format and without [] brackets
+; Folder-NameInput[input_loop_index]_[FolderSlot ID]
+
+; VariableFolderPath_XXXX will contain the placeholders that RegEX rules will replace, or the wide placeholders defined under the 
+; [Script-Wide placeholder variables] section 
+	VariableFolderPath_1="Tickets\test{REPLACE_INPUT1}\{REPLACE_INPUT2}"
+
+; Folder Input 1 and its RegEx rules, if not needed, comment thre lines below
+Folder-NameInput1_1="Document number"
+Folder-RegExDeleteFromInput1_1="i)[^\d]|^0"
+Folder-RegExInsertInput1_1="i)\{REPLACE_INPUT1\}"
+
+; Folder Input 2 and its RegEx rules, if not needed, comment thre lines below
+Folder-NameInput2_1="Second number"
+Folder-RegExDeleteFromInput2_1="i)[^\d]|^0"
+Folder-RegExInsertInput2_1="i)\{REPLACE_INPUT2\}"
+	
+; Same approach for FileName, create as many inputs as desired with the three fields
+; File-CreateWithName_XXXX will contain the placeholders that RegEX rules will replace, or the wide placeholders defined under the 
+; [Script-Wide special placeholder variables] section on the USAGE-GUIDE document
+File-CreateWithName_1="{FILE_REPLACE_INPUT1}-{FILE_REPLACE_INPUT2}Case notes.md"
+; File-NameInput[input_loop_index]_[SLOT ID]
+
+; File Input 1 and its RegEx rules
+	File-NameInput1_1="File number"
+	File-RegExDeleteFromInput1_1="i)[^\d]|^0"
+	File-RegExInsertInput1_1="i)\{FILE_REPLACE_INPUT1\}"
+
+; File Input 2 and its RegEx rules
+	File-NameInput2_1="File number"
+	File-RegExDeleteFromInput2_1="i)[^\d]|^0"
+	File-RegExInsertInput2_1="i)\{FILE_REPLACE_INPUT2\}"
+	
+; (OPTIONAL) Create contents for this file, this will allow to create virtually unlimited lines in a file, 
+; each line goes in a variable with the format File-CreateWithContents[loop_index]_[SLOT ID]
+	File-CreateWithContents1_1="File created at: {A_DATE_NOW}"
+	File-CreateWithContents2_1="# CASE: "
+	File-CreateWithContents3_1=""
+	File-CreateWithContents4_1="Deployment ID:"
+	File-CreateWithContents5_1="Support credits:"
+	File-CreateWithContents6_1="Public IP:"
+	File-CreateWithContents7_1=""
+	File-CreateWithContents8_1="VPN IP:"
+	File-CreateWithContents9_1=""
+```
+
 [RegExReplaceText_X] section
 -------------------------
 New implementation to allow to create several slots to replace text. 
@@ -450,10 +601,9 @@ NEW: Optionally you can create a hotkey shortcut with the ID or label to call a 
 
 Similarly to `ProcessFolderSlot_X()` function, if you enter a number as the first character, it will trigger the `Search by id` mode, which will load the ReplaceText slot data from the definition that has the same numeric ID as entered. If no ID exists on the `.ini` file, it will show an error message. 
 
-If you enter letters or special characters first, it will perform the search based on `label`. This mode will allow [space] to be entered as part of the search criteria, so confirm desired text with either [enter] or [tab].
+If you enter letters or special characters first, it will perform the search based on `label`. This mode will allow `[space]` to be entered as part of the search criteria, so confirm desired text with either `[enter]` or `[tab]`.
 
-**Important:** IDs on this function do not need to be continuous, in other words, you can create a group of slots with `_10,_11,_12`, other one starting at `_20,_21,_22`, and another one at te 30's range without affecting the searching loop, **as long as** you increase the value of the parameter `RegExReplaceText_X-MaxReplaceTextSlots=` to be equal or higher than the max numeric ID that you create among all groups. This parameter is present at the `[GeneralSettings]` section.
-
+**Important:** IDs on this function do not need to be continuous, however they need to start with a digit greater than 0; in other words, you can create a group of slots with `_10,_11,_12`, other one starting at `_20,_21,_22`, and another one at the 30's range without affecting the searching loop, **as long as** you increase the value of the parameter `RegExReplaceText_X-MaxReplaceTextSlots=` to be equal or higher than the max numeric ID that you create among all groups. This parameter is present at the `[GeneralSettings]` section.
 
 
 ### Variables description

@@ -10,6 +10,7 @@
 	BrowsersProfiles-MaxBrowserArguments="10"
 	ShowOpenWebSiteWithInput-MaxOpenWebSiteInputs="10"
 	CreateOpenFolder_X-MaxFolderSlots=100
+	CreateOpenFolder_X-MaxOpenCreateFolderAndFileInputs="10"
 	RegExReplaceText_X-MaxReplaceTextSlots=100
 	BrowsersProfile-DefaultProfile="Default"
 
@@ -202,6 +203,59 @@
 	LocationName_25="Downloads folder"
 	FolderLabel_25="DN"
 	FolderOperation_25="Open_Folder"
+
+	# NEW  parameters for the `Open_Create_Folder_And_File` mode
+	BaseFolderPath_1="C:\"
+	LocationName_1="Personal documents folder"
+	FolderLabel_1="docs"
+	FolderOperation_1="Open_Create_Folder_And_File"
+		
+	; This convention may be a little different, create as many inputs as needed in the following format and without [] brackets
+	; Folder-NameInput[input_loop_index]_[FolderSlot ID]
+
+	; VariableFolderPath_XXXX will contain the placeholders that RegEX rules will replace, or the wide placeholders defined under the 
+	; [Script-Wide placeholder variables] section 
+	VariableFolderPath_1="Documents\test{REPLACE_INPUT1}\{REPLACE_INPUT2}"
+
+	; Folder Input 1 and its RegEx rules, if not needed, comment thre lines below
+	Folder-NameInput1_1="Document number"
+	Folder-RegExDeleteFromInput1_1="i)[^\d]|^0"
+	Folder-RegExInsertInput1_1="i)\{REPLACE_INPUT1\}"
+
+	; Folder Input 2 and its RegEx rules, if not needed, comment thre lines below
+	Folder-NameInput2_1="Second number"
+	Folder-RegExDeleteFromInput2_1="i)[^\d]|^0"
+	Folder-RegExInsertInput2_1="i)\{REPLACE_INPUT2\}"
+		
+	; Same approach for FileName, create as many inputs as desired with the three fields
+	; File-CreateWithName_XXXX will contain the placeholders that RegEX rules will replace, or the wide placeholders defined under the 
+	; [Script-Wide special placeholder variables] section on the USAGE-GUIDE document
+	File-CreateWithName_1="{FILE_REPLACE_INPUT1}-{FILE_REPLACE_INPUT2}-notes.md"
+	; File-NameInput[input_loop_index]_[SLOT ID]
+
+	; File Input 1 and its RegEx rules
+	File-NameInput1_1="File number"
+	File-RegExDeleteFromInput1_1="i)[^\d]|^0"
+	File-RegExInsertInput1_1="i)\{FILE_REPLACE_INPUT1\}"
+
+	; File Input 2 and its RegEx rules
+	File-NameInput2_1="File additional serial"
+	File-RegExDeleteFromInput2_1="i)[^\d]|^0"
+	File-RegExInsertInput2_1="i)\{FILE_REPLACE_INPUT2\}"
+		
+	; (OPTIONAL) Create contents for this file, this will allow to create virtually unlimited lines in a file, 
+	; each line goes in a variable with the format File-CreateWithContents[loop_index]_[SLOT ID]
+	File-CreateWithContents1_1="File created at: {A_DATE_NOW}"
+	File-CreateWithContents2_1="# CASE: "
+	File-CreateWithContents3_1=""
+	File-CreateWithContents4_1="Document ID:"
+	File-CreateWithContents5_1="Notes:"
+	File-CreateWithContents6_1="Additional line:"
+	File-CreateWithContents7_1=""
+	File-CreateWithContents8_1="Client info:"
+	File-CreateWithContents9_1=""
+
+
 
 [RegExReplaceText_X]
 	# ReplaceTextName_10="MAC with colons"
