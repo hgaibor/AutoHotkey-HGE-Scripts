@@ -9,20 +9,14 @@
 ; *		
 ; *		2021-09-29   Imported Gist to a repository for better tracking and updating, 
 ; *								 this history won't be updated anymore..
-;	*		2021-02-10	 Added more functionalities and multiple parameter-based calls 
-;	*		2021-02-05	 Added .ini file processing for ease of management and sharing 
+; *		2021-02-10	 Added more functionalities and multiple parameter-based calls 
+; *		2021-02-05	 Added .ini file processing for ease of management and sharing 
 ; *		2021-02-01	 Refactored code for reuse optimization
 ; *
 ; ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** ***** *****
 
 #NoEnv
 #Persistent
-
-
-; Menu, Tray, Add, Get custom ENV vars, get_current_env_vars
-; Menu, Tray, Add, Set custom ENV vars, set_env_vars
-
-; Menu, Tray, Add, This menu item is a submenu, :MySubmenu
 
 ; Attempt to load INI file, if not successful, exit app
 Global IniSettingsFileName
@@ -74,14 +68,14 @@ if (RunScriptAsAdmin = "yes")
 	; Validate the script has admin rights, as it is necessary for the route_add commands to work 
 	if not (A_IsAdmin or RegExMatch(full_command_line, " /restart(?!\S)"))
 	{
-			try
-			{
-					if A_IsCompiled
-							Run *RunAs "%A_ScriptFullPath%" /restart
-					else
-							Run *RunAs "%A_AhkPath%" /restart "%A_ScriptFullPath%"
-			}
-			ExitApp
+		try
+		{
+			if A_IsCompiled
+				Run *RunAs "%A_ScriptFullPath%" /restart
+			else
+				Run *RunAs "%A_AhkPath%" /restart "%A_ScriptFullPath%"
+		}
+		ExitApp
 	}
 }
 
@@ -150,6 +144,275 @@ open_ini_file:
 	run %IniSettingsFilePath%
 return 
 
+; BEGIN Script-Wide special placeholder variables replacement function ReplacePlaceholderStrings, user can add new placeholders,
+; which will be replaced on all functions that hase this line:
+; <== {PLACEHOLDER VARIABLE ENABLED} ==>
+
+ReplacePlaceholderStrings(BaseString){
+	; Function to dynamically generate values based on common AHK expressions, this will allow you to use these placeholders 
+	; at the ini file to set names based on AHk variables. 
+	; Note: Not all of these placeholders are standard AHK variables
+
+	SanitizedString := BaseString
+
+	; Custom placeholders not default for  AHK variables
+	FormatTime, FormattedVar, , yyyy-MM-dd
+	SanitizedString := StrReplace(SanitizedString, "{A_DATE_NOW}", FormattedVar)
+
+	FormatTime, FormattedVar, , HH.mm.ss
+	SanitizedString := StrReplace(SanitizedString, "{A_TIME_NOW}", FormattedVar)
+	
+	FormatTime, FormattedVar, , hh.mm.ss tt
+	SanitizedString := StrReplace(SanitizedString, "{A_12HourAM_PM}", FormattedVar)
+
+	FormatTime, FormattedVar, , YDay0
+	SanitizedString := StrReplace(SanitizedString, "{A_YDay0}", FormattedVar)
+
+	FormattedVar := SubStr(A_YWeek, -1)
+	SanitizedString := StrReplace(SanitizedString, "{A_Week_of_year}", FormattedVar)
+
+	; Placeholders for standard AHK variables
+	SanitizedString := StrReplace(SanitizedString, "{A_YYYY}", A_YYYY)
+	SanitizedString := StrReplace(SanitizedString, "{A_Year}", A_year)
+	SanitizedString := StrReplace(SanitizedString, "{A_MM}", A_MM)
+	SanitizedString := StrReplace(SanitizedString, "{A_Mon}", A_Mon)
+	SanitizedString := StrReplace(SanitizedString, "{A_DD}", A_DD)
+	SanitizedString := StrReplace(SanitizedString, "{A_MDay}", A_MDay)
+	SanitizedString := StrReplace(SanitizedString, "{A_MMMM}", A_MMMM)
+	SanitizedString := StrReplace(SanitizedString, "{A_MMM}", A_MMM)
+	SanitizedString := StrReplace(SanitizedString, "{A_DDDD}", A_DDDD)
+	SanitizedString := StrReplace(SanitizedString, "{A_DDD}", A_DDD)
+	SanitizedString := StrReplace(SanitizedString, "{A_WDay}", A_WDay)
+	SanitizedString := StrReplace(SanitizedString, "{A_YDay}", A_YDay)
+	SanitizedString := StrReplace(SanitizedString, "{A_YWeek}", A_YWeek)
+	SanitizedString := StrReplace(SanitizedString, "{A_Hour}", A_Hour)
+	SanitizedString := StrReplace(SanitizedString, "{A_Min}", A_Min)
+	SanitizedString := StrReplace(SanitizedString, "{A_Sec}", A_Sec)
+	SanitizedString := StrReplace(SanitizedString, "{A_MSec}", A_MSec)
+	SanitizedString := StrReplace(SanitizedString, "{A_Now}", A_Now)
+
+	; Placeholders for user-defined paths
+	; UserDefinedPathVar := CleanUpPathString(BaseString, LeftTrim:=true, RightTrim:=true, SanitizeChar:="\")
+	IniRead, UserDefinedPathVar, %IniSettingsFilePath%, UserDefinedPaths, A_MyDocuments_Path
+	UserDefinedPathVar := CleanUpPathString(UserDefinedPathVar)
+	SanitizedString := StrReplace(SanitizedString, "{A_MyDocuments_Path}", UserDefinedPathVar)
+
+	IniRead, UserDefinedPathVar, %IniSettingsFilePath%, UserDefinedPaths, A_Downloads_Path
+	UserDefinedPathVar := CleanUpPathString(UserDefinedPathVar)
+	SanitizedString := StrReplace(SanitizedString, "{A_Downloads_Path}", UserDefinedPathVar)
+
+	IniRead, UserDefinedPathVar, %IniSettingsFilePath%, UserDefinedPaths, A_ProgramFiles_Path
+	UserDefinedPathVar := CleanUpPathString(UserDefinedPathVar)
+	SanitizedString := StrReplace(SanitizedString, "{A_ProgramFiles_Path}", UserDefinedPathVar)
+
+	IniRead, UserDefinedPathVar, %IniSettingsFilePath%, UserDefinedPaths, A_ProgramFiles_x86_Path
+	UserDefinedPathVar := CleanUpPathString(UserDefinedPathVar)
+	SanitizedString := StrReplace(SanitizedString, "{A_ProgramFiles_x86_Path}", UserDefinedPathVar)
+
+	IniRead, UserDefinedPathVar, %IniSettingsFilePath%, UserDefinedPaths, A_UserFolder_Path
+	UserDefinedPathVar := CleanUpPathString(UserDefinedPathVar)
+	SanitizedString := StrReplace(SanitizedString, "{A_UserFolder_Path}", UserDefinedPathVar)
+
+	IniRead, UserDefinedPathVar, %IniSettingsFilePath%, UserDefinedPaths, A_User_Defined_Path_1
+	UserDefinedPathVar := CleanUpPathString(UserDefinedPathVar)
+	SanitizedString := StrReplace(SanitizedString, "{A_User_Defined_Path_1}", UserDefinedPathVar)
+
+	IniRead, UserDefinedPathVar, %IniSettingsFilePath%, UserDefinedPaths, A_User_Defined_Path_2
+	UserDefinedPathVar := CleanUpPathString(UserDefinedPathVar)
+	SanitizedString := StrReplace(SanitizedString, "{A_User_Defined_Path_2}", UserDefinedPathVar)
+
+	IniRead, UserDefinedPathVar, %IniSettingsFilePath%, UserDefinedPaths, A_User_Defined_Path_3
+	UserDefinedPathVar := CleanUpPathString(UserDefinedPathVar)
+	SanitizedString := StrReplace(SanitizedString, "{A_User_Defined_Path_3}", UserDefinedPathVar)
+
+	IniRead, UserDefinedPathVar, %IniSettingsFilePath%, UserDefinedPaths, A_User_Defined_Path_4
+	UserDefinedPathVar := CleanUpPathString(UserDefinedPathVar)
+	SanitizedString := StrReplace(SanitizedString, "{A_User_Defined_Path_4}", UserDefinedPathVar)
+
+	IniRead, UserDefinedPathVar, %IniSettingsFilePath%, UserDefinedPaths, A_User_Defined_Path_5
+	UserDefinedPathVar := CleanUpPathString(UserDefinedPathVar)
+	SanitizedString := StrReplace(SanitizedString, "{A_User_Defined_Path_5}", UserDefinedPathVar)
+
+	IniRead, UserDefinedPathVar, %IniSettingsFilePath%, UserDefinedPaths, A_User_Defined_Path_6
+	UserDefinedPathVar := CleanUpPathString(UserDefinedPathVar)
+	SanitizedString := StrReplace(SanitizedString, "{A_User_Defined_Path_6}", UserDefinedPathVar)
+
+	IniRead, UserDefinedPathVar, %IniSettingsFilePath%, UserDefinedPaths, A_User_Defined_Path_7
+	UserDefinedPathVar := CleanUpPathString(UserDefinedPathVar)
+	SanitizedString := StrReplace(SanitizedString, "{A_User_Defined_Path_7}", UserDefinedPathVar)
+
+	IniRead, UserDefinedPathVar, %IniSettingsFilePath%, UserDefinedPaths, A_User_Defined_Path_8
+	UserDefinedPathVar := CleanUpPathString(UserDefinedPathVar)
+	SanitizedString := StrReplace(SanitizedString, "{A_User_Defined_Path_8}", UserDefinedPathVar)
+
+	IniRead, UserDefinedPathVar, %IniSettingsFilePath%, UserDefinedPaths, A_User_Defined_Path_9
+	UserDefinedPathVar := CleanUpPathString(UserDefinedPathVar)
+	SanitizedString := StrReplace(SanitizedString, "{A_User_Defined_Path_9}", UserDefinedPathVar)
+
+	IniRead, UserDefinedPathVar, %IniSettingsFilePath%, UserDefinedPaths, A_User_Defined_Path_10
+	UserDefinedPathVar := CleanUpPathString(UserDefinedPathVar)
+	SanitizedString := StrReplace(SanitizedString, "{A_User_Defined_Path_10}", UserDefinedPathVar)
+
+	IniRead, UserDefinedPathVar, %IniSettingsFilePath%, UserDefinedPaths, A_User_Defined_Path_11
+	UserDefinedPathVar := CleanUpPathString(UserDefinedPathVar)
+	SanitizedString := StrReplace(SanitizedString, "{A_User_Defined_Path_11}", UserDefinedPathVar)
+
+	IniRead, UserDefinedPathVar, %IniSettingsFilePath%, UserDefinedPaths, A_User_Defined_Path_12
+	UserDefinedPathVar := CleanUpPathString(UserDefinedPathVar)
+	SanitizedString := StrReplace(SanitizedString, "{A_User_Defined_Path_12}", UserDefinedPathVar)
+
+	; MsgBox %SanitizedString% ; [HGE] (DEBUG) Uncomment_for_tests
+	return SanitizedString
+}
+; END Script-Wide special placeholder variables replacement function ReplacePlaceholderStrings
+
+
+; BEGIN Functions to process input hooks, which are used by slot-based functions
+global ProcessSlotInputHook, FolderSlotSearchById := false
+
+ProcessSlotInputHook_Char(ih, char){
+    InputFirstChar := SubStr(ih.input, 1,1)
+
+    if InputFirstChar is integer 
+    		FolderSlotSearchById := true
+  	else
+  		FolderSlotSearchById := false
+
+    if (GetKeyVK(char) = 27 )
+    {
+		ToolTip, % "ABORTED"
+		ProcessSlotInputHook.Stop()
+    }
+    else if (FolderSlotSearchById)
+    {
+    	ToolTip, % "FolderSlot ID: " ih.input
+    	ih.KeyOpt("{Space}", "E") 
+    }	
+    else
+    {
+    	ToolTip, % "FolderSlot label: " ih.input
+    	ih.KeyOpt("{Space}", "-E") 
+    }
+}
+
+ProcessSlotInputHook_KeyDown(ih, vk, sc){
+  if (vk = 8){ ; {Backspace}
+    ProcessSlotInputHook_Char(ih, "")
+  }
+
+  else if (vk = 32){ ; {Space}
+		if (FolderSlotSearchById = true)
+		{
+			ProcessSlotInputHook.Stop()
+		}
+	}
+
+	else if (vk = 27){ ; {Esc}
+		ProcessSlotInputHook.Stop()
+	}
+
+  else if (vk = 9){ ; Tab
+  	ProcessSlotInputHook.Stop()
+  }
+
+  return
+	RemoveProcessSlotInputHook_KeyDownToolTip:
+	ToolTip
+	return
+}
+
+ProcessSlotInputHook_End(){
+	SetTimer, RemoveProcessSlotInputHook_EndToolTip, -500
+
+	return
+	RemoveProcessSlotInputHook_EndToolTip:
+	ToolTip
+	return
+}
+; END Functions to process input hooks, which are used by slot-based functions
+
+; BEGIN Functions to process dynamic input variables, will be used by several functions to process a list of inputs and replace them over a base string
+ProcessVariableInputString(MaxLoopCount, IniFileSection, IniFileKeyPreffix, IniFileKeySuffix, NameDescription, BaseString){
+	; <== {PLACEHOLDER VARIABLE ENABLED} ==>
+	; To keep maximum compatibility, IniFileKeyPreffix and IniFileKeySuffix will be used optionally, since there are INI file sections with the format
+	; Variable_numID  and also PROGRAM-Varaible (with no numeric ID)
+	; This function will receive loop count, an INI file section to go through variables, and then it will replace and sanitize the base string provided
+	; Also, this function will error out with the string FUNCTION_EXITED_WITH_ERROR:%ErrorLevel% (Error level will be 1 on CANCEL, or 2 on TIMEOUT)
+	; if the user pressed one of these buttons, code that use this function should validate this error string so it stops executing any other code afterwards 
+
+	; NameInput%a_index% will be MANDATORY, even if it does not contains any RegExDeleteFromInput or RegExInsertInput with values, 
+	; and EVEN if it use a special reserved word like DATE_NOW() or TIME_NOW().
+	; IniRead, MaxFolderSlots, %IniSettingsFilePath%, GeneralSettings, %IniFileKeyPreffix%-MaxFolderSlots
+
+	; MsgBox, %MaxLoopCount% ; [HGE] (DEBUG) Uncomment_for_tests
+	; MsgBox, %IniFileSection% ; [HGE] (DEBUG) Uncomment_for_tests
+	; MsgBox, %IniFileKeyPreffix% ; [HGE] (DEBUG) Uncomment_for_tests
+	; MsgBox, %IniFileKeySuffix% ; [HGE] (DEBUG) Uncomment_for_tests
+	; MsgBox, %BaseString% ; [HGE] (DEBUG) Uncomment_for_tests
+	SanitizedString := BaseString
+
+	Loop %MaxLoopCount%
+	{
+		; This function will take arguments from ini file, sequentially starting from 1, 
+		;  until it finds no continuous N argument or until %MaxLoopCount%
+		IniRead, NameInput%a_index%, %IniSettingsFilePath%, %IniFileSection%, %IniFileKeyPreffix%NameInput%a_index%%IniFileKeySuffix%
+		IniRead, RegExDeleteFromInput%a_index%, %IniSettingsFilePath%, %IniFileSection%, %IniFileKeyPreffix%RegExDeleteFromInput%a_index%%IniFileKeySuffix%
+		IniRead, RegExInsertInput%a_index%, %IniSettingsFilePath%, %IniFileSection%, %IniFileKeyPreffix%RegExInsertInput%a_index%%IniFileKeySuffix%
+		
+		; msgNameInput := NameInput%a_index% ; [HGE] (DEBUG) Uncomment_for_tests
+		; msgRegExDeleteFromInput := RegExDeleteFromInput%a_index% ; [HGE] (DEBUG) Uncomment_for_tests
+		; msgRegExInsertInput := RegExInsertInput%a_index% ; [HGE] (DEBUG) Uncomment_for_tests
+		; MsgBox, %msgNameInput% %msgRegExDeleteFromInput% %msgRegExInsertInput% ; [HGE] (DEBUG) Uncomment_for_tests
+
+		SanitizedString := ReplacePlaceholderStrings(SanitizedString)
+
+		if (NameInput%a_index% == "ERROR") 
+			break
+		
+		NameInput := % NameInput%a_index%
+		InputBox, VariableInput%a_index%, %WinEnvName%,Enter %NameInput% for %NameDescription%
+		if (ErrorLevel > 0)
+		{
+			SanitizedString := "FUNCTION_EXITED_WITH_ERROR:" ErrorLevel
+			return %SanitizedString%
+		} 
+		
+		RegExCleanedInput%a_index% := % RegExReplace(VariableInput%a_index%, RegExDeleteFromInput%a_index%)
+		SanitizedString := RegExReplace(SanitizedString, RegExInsertInput%a_index%, RegExCleanedInput%a_index%)
+	}
+	; MsgBox, %SanitizedString% ; [HGE] (DEBUG) Uncomment_for_tests
+	return %SanitizedString%
+}
+
+CleanUpPathString(BaseString, LeftTrim:=true, RightTrim:=true, SanitizeChar:="\"){
+	; This function will remove left and rigt white spaces and tabs, also it will remove a single leading and trailing SanitizeChar from the BaseString declared 
+	BaseString_StartChar := ""
+	BaseString_EndChar := ""
+	SanitizedString := ""
+
+	BaseString := Trim(BaseString)
+
+	if (BaseString<>"")
+	{
+		; Getting first and last characters from the BaseString to validate single \ will be always present
+		BaseString_StartChar := SubStr(BaseString, 1, 1)
+		BaseString_EndChar := SubStr(BaseString, 0)
+
+		; Validating just in case BaseString contains a leading \, we will remove this one in case it matches
+		if ((BaseString_StartChar==SanitizeChar) && LeftTrim)
+			BaseString := SubStr(BaseString, 2)
+			; MsgBox, %BaseString_StartChar% ; [HGE] (DEBUG) Uncomment_for_tests
+
+		if ((BaseString_EndChar==SanitizeChar)  && RightTrim)
+			BaseString := SubStr(BaseString, 1, -1)
+			; MsgBox, %BaseString_EndChar% ; [HGE] (DEBUG) Uncomment_for_tests
+	}
+
+	return BaseString
+}
+
+; END Functions to process dynamic input variables, will be used by several functions to process a list of inputs and replace them over a base string
+
 
 ToggleAlwaysOnTop(){
 	MouseGetPos,,,AppWin,VarControl
@@ -183,58 +446,70 @@ WrittenPaste(){
 SearchAndClose(WindowTitle,CloseCommand){
 	; MsgBox test start 
 	; testCounter := 0
+	Loop 
+	{
+	    if (WinExist(WindowTitle))
+	    {   
+	        WinActivate, %WindowTitle%
+	        WinWaitActive, %WindowTitle%,,3
+	        if ErrorLevel
+	        {
+	            ; MsgBox, No windows found
+				MsgBox, 64, %WinEnvName%No more windows, No more windows with the tittle: `n"%WindowTitle%"
+				return
+	        }
+	        else
+	        {
+		       	; Send, {Alt}{f4}
+		       	Switch CloseCommand
+		       	{
+					Case "Alt+F4":
+					Send, !{f4}
+					Case "Control+Q":
+					Send, ^q
+					; Default:
+					;	Statements3
+		       	}
+		        Sleep, 100
+	        }
 
-	Loop {
-		; testCounter += 1
-		; if (testCounter >= 30)
-  ;   {
-  ;   	MsgBox test end 
-  ;   	return
-  ;   }
-    
-    if (WinExist(WindowTitle))
-    {   
-        WinActivate, %WindowTitle%
-        WinWaitActive, %WindowTitle%,,3
-        if ErrorLevel
-        {
-            ; MsgBox, No windows found
-					MsgBox, 64, %WinEnvName%No more windows, No more windows with the tittle: `n"%WindowTitle%"
-          return
-        }
-        else
-        {
-	       ;  ; Send, {Alt}{f4}
-	       	Switch CloseCommand
-	       	{
-	       	Case "Alt+F4":
-	        	Send, !{f4}
-	       	Case "Control+Q":
-	        	Send, ^q
-	       	; Default:
-	       	;     Statements3
-	       	}
-	        Sleep, 100
-        }
-
-    }
-    else
-    {
+	    }
+	    else
+	    {
 			MsgBox, 64, %WinEnvName%No more windows, No more windows with the tittle: `n"%WindowTitle%"
 			Return
-    }
+	    }
 	}
 }
 
 ShowOrRunProgram(ProgramNameId){
+	; <== {PLACEHOLDER VARIABLE ENABLED} ==>	
 	; Unified all functions for individual programs into sigle re-usable function, taking the parameters from SCRIPT.INI file	
 	; ShowOrRunProgram(command,arguments, path){
 	IniRead, AhkExeName, %IniSettingsFilePath%, ShowOrRunProgram, %ProgramNameId%-AhkExeName
+	; Sanitize string with ReplacePlaceholderStrings()
+	AhkExeName := ReplacePlaceholderStrings(AhkExeName)
+
 	IniRead, AhkGroupName, %IniSettingsFilePath%, ShowOrRunProgram, %ProgramNameId%-AhkGroupName
+	; Sanitize string with ReplacePlaceholderStrings()
+	AhkGroupName := ReplacePlaceholderStrings(AhkGroupName)
+
 	IniRead, ProgramName, %IniSettingsFilePath%, ShowOrRunProgram, %ProgramNameId%-ProgramName
+	; Sanitize string with ReplacePlaceholderStrings()
+	ProgramName := ReplacePlaceholderStrings(ProgramName)
+
 	IniRead, CommandExe, %IniSettingsFilePath%, ShowOrRunProgram, %ProgramNameId%-CommandExe
+	; Sanitize string with ReplacePlaceholderStrings()
+	CommandExe := ReplacePlaceholderStrings(CommandExe)
+
 	IniRead, CommandPath, %IniSettingsFilePath%, ShowOrRunProgram, %ProgramNameId%-CommandPath
+	; Sanitize string with ReplacePlaceholderStrings()
+	CommandPath := ReplacePlaceholderStrings(CommandPath)
+
 	IniRead, CommandArgs, %IniSettingsFilePath%, ShowOrRunProgram, %ProgramNameId%-CommandArgs
+	; Sanitize string with ReplacePlaceholderStrings()
+	CommandArgs := ReplacePlaceholderStrings(CommandArgs)
+
 
 	If ((AhkExeName == "ERROR") || (AhkGroupName == "ERROR") || (ProgramName == "ERROR") || (CommandExe == "ERROR") || (CommandPath == "ERROR") || (CommandArgs == "ERROR"))
 	{
@@ -243,14 +518,6 @@ ShowOrRunProgram(ProgramNameId){
 	}
 	; [PENDING]: to implement
 	; IniRead, RunAsAdmin, %IniSettingsFilePath%, ShowOrRunProgram, %ProgramNameId%-RunAsAdmin
-
-	; MsgBox, AhkExeName--> %AhkExeName% ; [HGE] (DEBUG) Uncomment_for_tests
-	; MsgBox, AhkGroupName--> %AhkGroupName% ; [HGE] (DEBUG) Uncomment_for_tests
-	; MsgBox, ProgramName--> %ProgramName% ; [HGE] (DEBUG) Uncomment_for_tests
-	; MsgBox, CommandExe--> %CommandExe% ; [HGE] (DEBUG) Uncomment_for_tests
-	; MsgBox, CommandPath--> %CommandPath% ; [HGE] (DEBUG) Uncomment_for_tests
-	; MsgBox, CommandArgs--> %CommandArgs% ; [HGE] (DEBUG) Uncomment_for_tests
-	; MsgBox, RunAsAdmin--> %RunAsAdmin% ; [HGE] (DEBUG) Uncomment_for_tests
 
 	SetTitleMatchMode, 2
 	if WinExist(AhkExeName)
@@ -283,80 +550,111 @@ ShowOrRunProgram(ProgramNameId){
 
 
 ShowOrRunWebSite(WebSiteNameId){
+	; <== {PLACEHOLDER VARIABLE ENABLED} ==>
 	; Unified all functions for individual programs into sigle re-usable function, taking the parameters from SCRIPT.INI file	
-	; ShowOrRunWebSite(command,arguments, path){
-		IniRead, BrowserExe, %IniSettingsFilePath%, ShowOrRunWebSite, %WebSiteNameId%-BrowserExe
-		IniRead, BrowserPath, %IniSettingsFilePath%, ShowOrRunWebSite, %WebSiteNameId%-BrowserPath
-		IniRead, AhkSearchWindowTitle, %IniSettingsFilePath%, ShowOrRunWebSite, %WebSiteNameId%-AhkSearchWindowTitle
-		IniRead, AhkGroupName, %IniSettingsFilePath%, ShowOrRunWebSite, %WebSiteNameId%-AhkGroupName
-		IniRead, SiteName, %IniSettingsFilePath%, ShowOrRunWebSite, %WebSiteNameId%-SiteName
-		IniRead, Arguments1, %IniSettingsFilePath%, ShowOrRunWebSite, %WebSiteNameId%-Arguments1
-		IniRead, Arguments2, %IniSettingsFilePath%, ShowOrRunWebSite, %WebSiteNameId%-Arguments2
-		IniRead, Arguments3, %IniSettingsFilePath%, ShowOrRunWebSite, %WebSiteNameId%-Arguments3
-		IniRead, Arguments4, %IniSettingsFilePath%, ShowOrRunWebSite, %WebSiteNameId%-Arguments4
+	IniRead, BrowserExe, %IniSettingsFilePath%, ShowOrRunWebSite, %WebSiteNameId%-BrowserExe
+	; Sanitize string with ReplacePlaceholderStrings()
+	BrowserExe := ReplacePlaceholderStrings(BrowserExe)
+
+	IniRead, BrowserPath, %IniSettingsFilePath%, ShowOrRunWebSite, %WebSiteNameId%-BrowserPath
+	; Sanitize string with ReplacePlaceholderStrings()
+	BrowserPath := ReplacePlaceholderStrings(BrowserPath)
+
+	IniRead, AhkSearchWindowTitle, %IniSettingsFilePath%, ShowOrRunWebSite, %WebSiteNameId%-AhkSearchWindowTitle
+	; Sanitize string with ReplacePlaceholderStrings()
+	AhkSearchWindowTitle := ReplacePlaceholderStrings(AhkSearchWindowTitle)
+
+	IniRead, AhkGroupName, %IniSettingsFilePath%, ShowOrRunWebSite, %WebSiteNameId%-AhkGroupName
+	; Sanitize string with ReplacePlaceholderStrings()
+	AhkGroupName := ReplacePlaceholderStrings(AhkGroupName)
+
+	IniRead, SiteName, %IniSettingsFilePath%, ShowOrRunWebSite, %WebSiteNameId%-SiteName
+	; Sanitize string with ReplacePlaceholderStrings()
+	SiteName := ReplacePlaceholderStrings(SiteName)
+
+	IniRead, Arguments1, %IniSettingsFilePath%, ShowOrRunWebSite, %WebSiteNameId%-Arguments1
+	; Sanitize string with ReplacePlaceholderStrings()
+	Arguments1 := ReplacePlaceholderStrings(Arguments1)
+
+	IniRead, Arguments2, %IniSettingsFilePath%, ShowOrRunWebSite, %WebSiteNameId%-Arguments2
+	; Sanitize string with ReplacePlaceholderStrings()
+	Arguments2 := ReplacePlaceholderStrings(Arguments2)
+
+	IniRead, Arguments3, %IniSettingsFilePath%, ShowOrRunWebSite, %WebSiteNameId%-Arguments3
+	; Sanitize string with ReplacePlaceholderStrings()
+	Arguments3 := ReplacePlaceholderStrings(Arguments3)
+
+	IniRead, Arguments4, %IniSettingsFilePath%, ShowOrRunWebSite, %WebSiteNameId%-Arguments4
+	; Sanitize string with ReplacePlaceholderStrings()
+	Arguments4 := ReplacePlaceholderStrings(Arguments4)
+
+	IniRead, Arguments5, %IniSettingsFilePath%, ShowOrRunWebSite, %WebSiteNameId%-Arguments5
+	; Sanitize string with ReplacePlaceholderStrings()
+	Arguments5 := ReplacePlaceholderStrings(Arguments5)
+
+	IniRead, Arguments6, %IniSettingsFilePath%, ShowOrRunWebSite, %WebSiteNameId%-Arguments6
+	; Sanitize string with ReplacePlaceholderStrings()
+	Arguments6 := ReplacePlaceholderStrings(Arguments6)
 
 
-		; MsgBox, BrowserExe --> %BrowserExe% ; [HGE] (DEBUG) Uncomment_for_tests
-		; MsgBox, BrowserPath --> %BrowserPath% ; [HGE] (DEBUG) Uncomment_for_tests
-		; MsgBox, AhkSearchWindowTitle --> %AhkSearchWindowTitle% ; [HGE] (DEBUG) Uncomment_for_tests
-		; MsgBox, AhkGroupName --> %AhkGroupName% ; [HGE] (DEBUG) Uncomment_for_tests
-		; MsgBox, SiteName --> %SiteName% ; [HGE] (DEBUG) Uncomment_for_tests
-		; MsgBox, Arguments1 --> %Arguments1% ; [HGE] (DEBUG) Uncomment_for_tests
-		; MsgBox, Arguments2 --> %Arguments2% ; [HGE] (DEBUG) Uncomment_for_tests
-		; MsgBox, Arguments3 --> %Arguments3% ; [HGE] (DEBUG) Uncomment_for_tests
-		; MsgBox, Arguments4 --> %Arguments4% ; [HGE] (DEBUG) Uncomment_for_tests
-		; MsgBox, Arguments5 --> %Arguments5% ; [HGE] (DEBUG) Uncomment_for_tests
-		; MsgBox, Arguments6 --> %Arguments6% ; [HGE] (DEBUG) Uncomment_for_tests
+	if ((BrowserExe == "ERROR") || (BrowserPath == "ERROR") || (AhkSearchWindowTitle == "ERROR") || (AhkGroupName == "ERROR") || (SiteName == "ERROR") || (Arguments1 == "ERROR") || (Arguments2 == "ERROR") || (Arguments3 == "ERROR") || (Arguments4 == "ERROR") || (Arguments5 == "ERROR") || (Arguments6 == "ERROR"))
+	{
+		MsgBox, ERROR... Missing parameters for ShowOrRunWebSite function check the "%IniSettingsFileName%" file
+		return 
+	}
+	; [PENDING]: implement Run as admin
+	; IniRead, RunAsAdmin, %IniSettingsFilePath%, ShowOrRunWebSite, %ProgramNameId%-RunAsAdmin
 
-		if ((BrowserExe == "ERROR") || (BrowserPath == "ERROR") || (AhkSearchWindowTitle == "ERROR") || (AhkGroupName == "ERROR") || (SiteName == "ERROR") || (Arguments1 == "ERROR") || (Arguments2 == "ERROR") || (Arguments3 == "ERROR") || (Arguments4 == "ERROR") || (Arguments5 == "ERROR") || (Arguments6 == "ERROR"))
+	SetTitleMatchMode, 2
+	if WinExist(AhkSearchWindowTitle)
+	{   
+		; Multi-window approach
+		GroupAdd, %AhkGroupName%, %AhkSearchWindowTitle%
+		GroupActivate %AhkGroupName%
+	}
+	else
+	{
+		MsgBox, 36, %WinEnvName%Open %SiteName%?, No window with that title found, open new instance? 
+		IfMsgBox Yes
 		{
-			MsgBox, ERROR... Missing parameters for ShowOrRunWebSite function check the "%IniSettingsFileName%" file
-			return 
-		}
-		; [PENDING]: implement Run as admin
-		; IniRead, RunAsAdmin, %IniSettingsFilePath%, ShowOrRunWebSite, %ProgramNameId%-RunAsAdmin
 
-		SetTitleMatchMode, 2
-		if WinExist(AhkSearchWindowTitle)
-		{   
-			; Multi-window approach
-			GroupAdd, %AhkGroupName%, %AhkSearchWindowTitle%
-			GroupActivate %AhkGroupName%
-		}
-		else
-		{
-			MsgBox, 36, %WinEnvName%Open %SiteName%?, No window with that title found, open new instance? 
-			IfMsgBox Yes
+			BrowserArgs := Arguments1 . Arguments2 . Arguments3 . Arguments4 . Arguments5 . Arguments6
+			
+			; Work-around not to run tasks as administrator since the Script itself needs to be run like that for other tasks 
+			; WARNING: RunWithNoElevation() may trigger alerts on some Antivirus software flagging it as:
+			; 	- Trojan.Multi.GenAutorunTask.b
+			; 	- PDM:Trojan.Win32.GenAutorunSchedulerTaskRun.b
+			; This is due to the function using svchost.exe to "program" the task to start the desired application or process.
+			if (RunScriptAsAdmin = "yes") 
+			{	
+				RunWithNoElevation(BrowserExe,BrowserArgs, BrowserPath)
+			}
+			else
 			{
-
-				BrowserArgs := Arguments1 . Arguments2 . Arguments3 . Arguments4 . Arguments5 . Arguments6
-				
-				; Work-around not to run tasks as administrator since the Script itself needs to be run like that for other tasks 
-				; WARNING: RunWithNoElevation() may trigger alerts on some Antivirus software flagging it as:
-				; 	- Trojan.Multi.GenAutorunTask.b
-				; 	- PDM:Trojan.Win32.GenAutorunSchedulerTaskRun.b
-				; This is due to the function using svchost.exe to "program" the task to start the desired application or process.
-				if (RunScriptAsAdmin = "yes") 
-				{	
-					RunWithNoElevation(BrowserExe,BrowserArgs, BrowserPath)
-				}
-				else
-				{
-						Run %BrowserExe% %BrowserArgs%
-				}
+					Run %BrowserExe% %BrowserArgs%
 			}
 		}
+	}
 }
 
 ShowOpenWebSiteWithInput(WebSiteWithInputNameId){
+	; <== {PLACEHOLDER VARIABLE ENABLED} ==>	
 	IniRead, AhkSearchWindowTitle, %IniSettingsFilePath%, ShowOpenWebSiteWithInput, %WebSiteWithInputNameId%-AhkSearchWindowTitle
+	AhkSearchWindowTitle := ReplacePlaceholderStrings(AhkSearchWindowTitle)
+
 	IniRead, AhkGroupName, %IniSettingsFilePath%, ShowOpenWebSiteWithInput, %WebSiteWithInputNameId%-AhkGroupName
+	AhkGroupName := ReplacePlaceholderStrings(AhkGroupName)
+
 	IniRead, SiteName, %IniSettingsFilePath%, ShowOpenWebSiteWithInput, %WebSiteWithInputNameId%-SiteName
-	IniRead, BaseUrl, %IniSettingsFilePath%, ShowOpenWebSiteWithInput, %WebSiteWithInputNameId%-BaseUrl
+	SiteName := ReplacePlaceholderStrings(SiteName)
+
+	; Not necessary since it will be a fixed value that script will then process
 	IniRead, OpenWebSiteOperation, %IniSettingsFilePath%, ShowOpenWebSiteWithInput, %WebSiteWithInputNameId%-OpenWebSiteOperation
+
 	
 	; Main URL to insert input parameters
 	IniRead, BaseUrl, %IniSettingsFilePath%, ShowOpenWebSiteWithInput, %WebSiteWithInputNameId%-BaseUrl
+	BaseUrl := ReplacePlaceholderStrings(BaseUrl)
 
 	ErrorCounter := 0
 	ErrorString := ""
@@ -397,6 +695,7 @@ ShowOpenWebSiteWithInput(WebSiteWithInputNameId){
 		{
 			; [BEGIN] Set browser profile in [ShowOpenWebSiteWithInput] this will indicate fields to load from [BrowsersProfiles]
 				IniRead, BrowserProfile, %IniSettingsFilePath%, ShowOpenWebSiteWithInput, %WebSiteWithInputNameId%-BrowserProfile
+
 				if (BrowserProfile == "ERROR")
 				{
 					; Attempt to load default profile defined at [GeneralSettings] before finally declaring error
@@ -408,6 +707,8 @@ ShowOpenWebSiteWithInput(WebSiteWithInputNameId){
 						ErrorString .= "- Or declared BrowserProfile %BrowserProfile% on current WebSiteWithInputNameId does not match a valid BrowserProfile at [BrowsersProfiles] section `n"
 					}
 				}
+				; Sanitize string with ReplacePlaceholderStrings()
+				BrowserProfile := ReplacePlaceholderStrings(BrowserProfile)
 
 
 				IniRead, OpenTarget, %IniSettingsFilePath%, ShowOpenWebSiteWithInput, %WebSiteWithInputNameId%-OpenTarget
@@ -415,8 +716,17 @@ ShowOpenWebSiteWithInput(WebSiteWithInputNameId){
 
 			; [BEGIN] Load web browser profile from [BrowsersProfiles], this is determined by particular profile under [ShowOpenWebSiteWithInput]
 				IniRead, BrowserExe, %IniSettingsFilePath%, BrowsersProfiles, %BrowserProfile%-DefinedBrowserExe
+				; Sanitize string with ReplacePlaceholderStrings()
+				BrowserExe := ReplacePlaceholderStrings(BrowserExe)
+
 				IniRead, BrowserPath, %IniSettingsFilePath%, BrowsersProfiles, %BrowserProfile%-DefinedBrowserPath
+				; Sanitize string with ReplacePlaceholderStrings()
+				BrowserPath := ReplacePlaceholderStrings(BrowserPath)
+
 				IniRead, BrowserUserProfile, %IniSettingsFilePath%, BrowsersProfiles, %BrowserProfile%-DefinedBrowserUserProfile
+				; Sanitize string with ReplacePlaceholderStrings()
+				BrowserUserProfile := ReplacePlaceholderStrings(BrowserUserProfile)
+
 				IniRead, NewWindowArg, %IniSettingsFilePath%, BrowsersProfiles, %BrowserProfile%-DefinedBrowserNewWindowArg
 				IniRead, NewTabArg, %IniSettingsFilePath%, BrowsersProfiles, %BrowserProfile%-DefinedBrowserNewTabArg
 			; [END] Load web browser profile from [BrowsersProfiles], this is determined by particular profile under [ShowOpenWebSiteWithInput]
@@ -491,6 +801,8 @@ ShowOpenWebSiteWithInput(WebSiteWithInputNameId){
 			Loop %MaxBrowserArguments%
 			{
 				IniRead, Arguments%a_index%, %IniSettingsFilePath%, BrowsersProfiles, %BrowserProfile%-DefinedBrowserArguments%a_index%
+				; Sanitize string with ReplacePlaceholderStrings()
+				Arguments%a_index% := ReplacePlaceholderStrings(Arguments%a_index%)
 				if ((Arguments%a_index% == "ERROR") || (Arguments%a_index% == "")) 
 					break
 				
@@ -554,8 +866,12 @@ ShowOpenWebSiteWithInput(WebSiteWithInputNameId){
 				; This function will take arguments from ini file, sequentially starting from 1, 
 				;  until it finds no continuous N argument or until %MaxOpenWebSiteInputs%
 				IniRead, NameInput%a_index%, %IniSettingsFilePath%, ShowOpenWebSiteWithInput, %WebSiteWithInputNameId%-NameInput%a_index%
+				; Sanitize string with ReplacePlaceholderStrings()
+				NameInput%a_index% := ReplacePlaceholderStrings(NameInput%a_index%)
+
 				IniRead, RegExDeleteFromInput%a_index%, %IniSettingsFilePath%, ShowOpenWebSiteWithInput, %WebSiteWithInputNameId%-RegExDeleteFromInput%a_index%
 				IniRead, RegExInsertInput%a_index%, %IniSettingsFilePath%, ShowOpenWebSiteWithInput, %WebSiteWithInputNameId%-RegExInsertInput%a_index%
+
 				
 				if (NameInput%a_index% == "ERROR") 
 					break
@@ -563,7 +879,8 @@ ShowOpenWebSiteWithInput(WebSiteWithInputNameId){
 				NameInput := % NameInput%a_index%
 				InputBox, UrlInput%a_index%, %WinEnvName%,Enter %NameInput% for %SiteName% URL
 				if ErrorLevel
-						Return
+					Return
+				UrlInput%a_index% := ReplacePlaceholderStrings(UrlInput%a_index%)
 				
 				CleanUrlInput%a_index% := % RegExReplace(UrlInput%a_index%, RegExDeleteFromInput%a_index%)
 				BrowserURL := RegExReplace(BrowserURL, RegExInsertInput%a_index%, CleanUrlInput%a_index%)
@@ -592,7 +909,7 @@ ShowOpenWebSiteWithInput(WebSiteWithInputNameId){
 				}
 				else
 				{
-						Run %BrowserExe% %BrowserArgs%
+					Run %BrowserExe% %BrowserArgs%
 				}
 
 			}
@@ -739,168 +1056,6 @@ FQDN_to_IP(ByRef FQDN) {
 	}
 }
 
-; Functions to process input hooks, which are used by slot-based functions
-global ProcessSlotInputHook, FolderSlotSearchById := false
-
-ProcessSlotInputHook_Char(ih, char){
-    InputFirstChar := SubStr(ih.input, 1,1)
-
-    if InputFirstChar is integer 
-    		FolderSlotSearchById := true
-  	else
-  		FolderSlotSearchById := false
-
-    if (GetKeyVK(char) = 27 )
-    {
-			ToolTip, % "ABORTED"
-			ProcessSlotInputHook.Stop()
-    }
-    else if (FolderSlotSearchById) {
-    	ToolTip, % "FolderSlot ID: " ih.input
-    	ih.KeyOpt("{Space}", "E") 
-    }	
-    else {
-    	ToolTip, % "FolderSlot label: " ih.input
-    	ih.KeyOpt("{Space}", "-E") 
-    }
-}
-
-ProcessSlotInputHook_KeyDown(ih, vk, sc){
-  if (vk = 8){ ; {Backspace}
-    ProcessSlotInputHook_Char(ih, "")
-  }
-
-  else if (vk = 32){ ; {Space}
-		if (FolderSlotSearchById = true)
-		{
-			ProcessSlotInputHook.Stop()
-		}
-	}
-
-	else if (vk = 27){ ; {Esc}
-		ProcessSlotInputHook.Stop()
-	}
-
-  else if (vk = 9){ ; Tab
-  	ProcessSlotInputHook.Stop()
-  }
-
-  return
-	RemoveProcessSlotInputHook_KeyDownToolTip:
-	ToolTip
-	return
-}
-
-ProcessSlotInputHook_End(){
-	SetTimer, RemoveProcessSlotInputHook_EndToolTip, -500
-
-	return
-	RemoveProcessSlotInputHook_EndToolTip:
-	ToolTip
-	return
-}
-; END Functions to process input hooks, which are used by slot-based functions
-
-; BEGIN Functions to process dynamic input variables, will be used by several functions to process a list of inputs and replace them over a base string
-ProcessVariableInputString(MaxLoopCount, IniFileSection, IniFileKeyPreffix, IniFileKeySuffix, NameDescription, BaseString){
-	; <== {PLACEHOLDER VARIABLE ENABLED} ==>
-	; To keep maximum compatibility, IniFileKeyPreffix and IniFileKeySuffix will be used optionally, since there are INI file sections with the format
-	; Variable_numID  and also PROGRAM-Varaible (with no numeric ID)
-	; This function will receive loop count, an INI file section to go through variables, and then it will replace and sanitize the base string provided
-
-	; NameInput%a_index% will be MANDATORY, even if it does not contains any RegExDeleteFromInput or RegExInsertInput with values, 
-	; and EVEN if it use a special reserved word like DATE_NOW() or TIME_NOW().
-	; IniRead, MaxFolderSlots, %IniSettingsFilePath%, GeneralSettings, %IniFileKeyPreffix%-MaxFolderSlots
-
-	; MsgBox, %MaxLoopCount% ; [HGE] (DEBUG) Uncomment_for_tests
-	; MsgBox, %IniFileSection% ; [HGE] (DEBUG) Uncomment_for_tests
-	; MsgBox, %IniFileKeyPreffix% ; [HGE] (DEBUG) Uncomment_for_tests
-	; MsgBox, %IniFileKeySuffix% ; [HGE] (DEBUG) Uncomment_for_tests
-	; MsgBox, %BaseString% ; [HGE] (DEBUG) Uncomment_for_tests
-	SanitizedString := BaseString
-
-	Loop %MaxLoopCount%
-	{
-		; This function will take arguments from ini file, sequentially starting from 1, 
-		;  until it finds no continuous N argument or until %MaxLoopCount%
-		IniRead, NameInput%a_index%, %IniSettingsFilePath%, %IniFileSection%, %IniFileKeyPreffix%NameInput%a_index%%IniFileKeySuffix%
-		IniRead, RegExDeleteFromInput%a_index%, %IniSettingsFilePath%, %IniFileSection%, %IniFileKeyPreffix%RegExDeleteFromInput%a_index%%IniFileKeySuffix%
-		IniRead, RegExInsertInput%a_index%, %IniSettingsFilePath%, %IniFileSection%, %IniFileKeyPreffix%RegExInsertInput%a_index%%IniFileKeySuffix%
-		
-		; msgNameInput := NameInput%a_index% ; [HGE] (DEBUG) Uncomment_for_tests
-		; msgRegExDeleteFromInput := RegExDeleteFromInput%a_index% ; [HGE] (DEBUG) Uncomment_for_tests
-		; msgRegExInsertInput := RegExInsertInput%a_index% ; [HGE] (DEBUG) Uncomment_for_tests
-		; MsgBox, %msgNameInput% %msgRegExDeleteFromInput% %msgRegExInsertInput% ; [HGE] (DEBUG) Uncomment_for_tests
-
-		SanitizedString := ReplacePlaceholderStrings(SanitizedString)
-
-		if (NameInput%a_index% == "ERROR") 
-			break
-		
-		NameInput := % NameInput%a_index%
-		InputBox, VariableInput%a_index%, %WinEnvName%,Enter %NameInput% for %NameDescription%
-		if ErrorLevel
-				Return
-		
-		RegExCleanedInput%a_index% := % RegExReplace(VariableInput%a_index%, RegExDeleteFromInput%a_index%)
-		SanitizedString := RegExReplace(SanitizedString, RegExInsertInput%a_index%, RegExCleanedInput%a_index%)
-	}
-	; MsgBox, %SanitizedString% ; [HGE] (DEBUG) Uncomment_for_tests
-	return %SanitizedString%
-}
-
-
-ReplacePlaceholderStrings(BaseString){
-	; Function to dynamically generate values based on common AHK expressions, this will allow you to use these placeholders 
-	; at the ini file to set names based on AHk variables. 
-	; Note: Not all of these placeholders are standard AHK variables
-
-	SanitizedString := BaseString
-
-	; Custom placeholders not default for  AHK variables
-	FormatTime, FormattedVar, , yyyy-MM-dd
-	SanitizedString := StrReplace(SanitizedString, "{A_DATE_NOW}", FormattedVar)
-
-	FormatTime, FormattedVar, , HH.mm.ss
-	SanitizedString := StrReplace(SanitizedString, "{A_TIME_NOW}", FormattedVar)
-	
-	FormatTime, FormattedVar, , hh.mm.ss tt
-	SanitizedString := StrReplace(SanitizedString, "{A_12HourAM_PM}", FormattedVar)
-
-	FormatTime, FormattedVar, , YDay0
-	SanitizedString := StrReplace(SanitizedString, "{A_YDay0}", FormattedVar)
-
-	FormattedVar := SubStr(A_YWeek, -1)
-	SanitizedString := StrReplace(SanitizedString, "{A_Week_of_year}", FormattedVar)
-
-	; Placeholders for standard AHK variables
-	SanitizedString := StrReplace(SanitizedString, "{A_YYYY}", A_YYYY)
-	SanitizedString := StrReplace(SanitizedString, "{A_Year}", A_year)
-	SanitizedString := StrReplace(SanitizedString, "{A_MM}", A_MM)
-	SanitizedString := StrReplace(SanitizedString, "{A_Mon}", A_Mon)
-	SanitizedString := StrReplace(SanitizedString, "{A_DD}", A_DD)
-	SanitizedString := StrReplace(SanitizedString, "{A_MDay}", A_MDay)
-	SanitizedString := StrReplace(SanitizedString, "{A_MMMM}", A_MMMM)
-	SanitizedString := StrReplace(SanitizedString, "{A_MMM}", A_MMM)
-	SanitizedString := StrReplace(SanitizedString, "{A_DDDD}", A_DDDD)
-	SanitizedString := StrReplace(SanitizedString, "{A_DDD}", A_DDD)
-	SanitizedString := StrReplace(SanitizedString, "{A_WDay}", A_WDay)
-	SanitizedString := StrReplace(SanitizedString, "{A_YDay}", A_YDay)
-	SanitizedString := StrReplace(SanitizedString, "{A_YWeek}", A_YWeek)
-	SanitizedString := StrReplace(SanitizedString, "{A_Hour}", A_Hour)
-	SanitizedString := StrReplace(SanitizedString, "{A_Min}", A_Min)
-	SanitizedString := StrReplace(SanitizedString, "{A_Sec}", A_Sec)
-	SanitizedString := StrReplace(SanitizedString, "{A_MSec}", A_MSec)
-	SanitizedString := StrReplace(SanitizedString, "{A_Now}", A_Now)
-
-	; MsgBox %SanitizedString% ; [HGE] (DEBUG) Uncomment_for_tests
-	return SanitizedString
-}
-
-
-; END Functions to process dynamic input variables, will be used by several functions to process a list of inputs and replace them over a base string
-
-
 ProcessFolderSlot_X(IdOrLabel:=""){
 	; <== {PLACEHOLDER VARIABLE ENABLED} ==>
 	FolderSlotLabelFound := false
@@ -942,10 +1097,10 @@ ProcessFolderSlot_X(IdOrLabel:=""){
 		FolderSlot := ProcessSlotInputHook.Input
 	}
 
-  if (ErrorLevel = "Stopped"){
+	if (ErrorLevel = "Stopped"){
 		FolderSlot := ""
 		return
-  }
+	}
 
 	; BEGIN code to call slot directly is defined via hotkey
 	FolderSlot_IdOrLabel_DirectGoTo:
@@ -954,7 +1109,8 @@ ProcessFolderSlot_X(IdOrLabel:=""){
 	FolderSlot := Trim(FolderSlot)
 	FolderSlotIndex := 
 
-	if (FolderSlot = "e"){
+	if (FolderSlot = "e")
+	{
 		FolderSlotsDescription := "=== Currently set folder Slots === `n`n"
 		Loop, %MaxFolderSlots%
 		{
@@ -994,6 +1150,8 @@ ProcessFolderSlot_X(IdOrLabel:=""){
 	{
 		FolderSlotID := FolderSlot
 		IniRead, BaseFolderPath, %IniSettingsFilePath%, CreateOpenFolder_X, BaseFolderPath_%FolderSlot%
+		BaseFolderPath := CleanUpPathString(BaseFolderPath)
+		BaseFolderPath := ReplacePlaceholderStrings(BaseFolderPath)
 		IniRead, LocationName, %IniSettingsFilePath%, CreateOpenFolder_X, LocationName_%FolderSlot%
 		IniRead, FolderOperation, %IniSettingsFilePath%, CreateOpenFolder_X, FolderOperation_%FolderSlot%
 
@@ -1016,6 +1174,8 @@ ProcessFolderSlot_X(IdOrLabel:=""){
 				; MsgBox %FolderSlotID% ; [HGE] (DEBUG) Uncomment_for_tests
 
 				IniRead, BaseFolderPath, %IniSettingsFilePath%, CreateOpenFolder_X, BaseFolderPath_%FolderSlotIndex%
+				BaseFolderPath := CleanUpPathString(BaseFolderPath)
+				BaseFolderPath := ReplacePlaceholderStrings(BaseFolderPath)
 				IniRead, LocationName, %IniSettingsFilePath%, CreateOpenFolder_X, LocationName_%FolderSlotIndex%
 				IniRead, FolderOperation, %IniSettingsFilePath%, CreateOpenFolder_X, FolderOperation_%FolderSlotIndex%
 
@@ -1045,8 +1205,8 @@ ProcessFolderSlot_X(IdOrLabel:=""){
 		
 		if (!FileExist(BaseFolderPath))
 		{
-			MsgBox, ERROR... SLOT "%FolderSlot%" base folder directory not found, check the "%IniSettingsFileName%" file under `n[CreateOpenFolder_X] --> BaseFolderPath_xx
-			return 
+			MsgBox, ERROR... SLOT "%FolderSlot%" `n%BaseFolderPath%`nBase folder directory not found, check the "%IniSettingsFileName%" file under `n[CreateOpenFolder_X] --> BaseFolderPath_xx
+			return
 		}
 
 		If (BaseFolderPath == "")
@@ -1078,8 +1238,18 @@ ProcessFolderSlot_X(IdOrLabel:=""){
 			IniRead, VariableFileName, %IniSettingsFilePath%, CreateOpenFolder_X, File-CreateWithName_%FolderSlotID%
 
 			FolderString := ProcessVariableInputString(MaxOpenCreateFolderAndFileInputs, "CreateOpenFolder_X", "Folder-", "_"FolderSlotID, LocationName, VariableFolderPath)
-			FileNameString := ProcessVariableInputString(MaxOpenCreateFolderAndFileInputs, "CreateOpenFolder_X", "File-", "_"FolderSlotID, LocationName, VariableFileName)
+			if (FolderString == "FUNCTION_EXITED_WITH_ERROR:1") ; User pressed CANCEL or ESC key at one of the input boxes
+			{
+				MsgBox, User pressed CANCEL
+				return
+			}
 
+			FileNameString := ProcessVariableInputString(MaxOpenCreateFolderAndFileInputs, "CreateOpenFolder_X", "File-", "_"FolderSlotID, LocationName, VariableFileName)
+			if (FileNameString == "FUNCTION_EXITED_WITH_ERROR:1") ; User pressed CANCEL or ESC key at one of the input boxes
+			{
+				MsgBox, User pressed CANCEL
+				return
+			}
 		}
 		
 		CreateOpenFolder(BaseFolderPath, LocationName, FolderOperation, FolderString, FileNameString, FolderSlotID)
@@ -1177,49 +1347,18 @@ ProcessFolderSlot(){
 
 
 CreateOpenFolder(BaseFolderPath, LocationName, FolderOperation, Folder_VariableFolderPath:="", File_CreateWithName:="", FolderSlotID:=""){
+	; <== {PLACEHOLDER VARIABLE ENABLED} ==>
 	VariableFolderPath_StartChar := ""
 	VariableFolderPath_EndChar := ""
 
-	Folder_VariableFolderPath := Trim(Folder_VariableFolderPath)
-	File_CreateWithName := Trim(File_CreateWithName)
-
-	BaseFolderPath_EndChar := SubStr(BaseFolderPath, 0)
-	if (BaseFolderPath_EndChar=="\")
-		BaseFolderPath := SubStr(BaseFolderPath, 1, -1)
-	; MsgBox %BaseFolderPath% ; [HGE] (DEBUG) Uncomment_for_tests
-
-
-	if (Folder_VariableFolderPath<>"")
-	{
-		; Getting first and last characters from the VariableFolderPath to validate single \ will be always present
-		VariableFolderPath_StartChar := SubStr(Folder_VariableFolderPath, 1, 1)
-		VariableFolderPath_EndChar := SubStr(Folder_VariableFolderPath, 0)
-
-		; Since BaseFolderPath will contain leading \ we will remove this one in case it matches
-		if (VariableFolderPath_StartChar=="\")
-			Folder_VariableFolderPath := SubStr(Folder_VariableFolderPath, 2)
-
-		if (VariableFolderPath_EndChar=="\")
-			Folder_VariableFolderPath := SubStr(Folder_VariableFolderPath, 1, -1)
-		
-		; MsgBox, %Folder_VariableFolderPath% ; [HGE] (DEBUG) Uncomment_for_tests
-	}
-
-	if (File_CreateWithName<>"")
-	{	
-		; Getting first and last characters from the VariableFolderPath to validate single \ will be always present
-		CheckFile_CreateWithName_StartChar := SubStr(File_CreateWithName, 1, 1)
-		CheckFile_CreateWithName_EndChar := SubStr(File_CreateWithName, 0)
-
-		; Since BaseFolderPath will contain leading \ we will remove this one in case it matches
-		if (CheckFile_CreateWithName_StartChar=="\")
-			File_CreateWithName := SubStr(File_CreateWithName, 2)
-
-		if (CheckFile_CreateWithName_EndChar=="\")
-			File_CreateWithName := SubStr(File_CreateWithName, 1, -1)
-		
-		; MsgBox, %File_CreateWithName% ; [HGE] (DEBUG) Uncomment_for_tests
-	}
+	; Folder_VariableFolderPath := Trim(Folder_VariableFolderPath)
+	BaseFolderPath := CleanUpPathString(BaseFolderPath)
+	BaseFolderPath := ReplacePlaceholderStrings(BaseFolderPath)
+	Folder_VariableFolderPath := CleanUpPathString(Folder_VariableFolderPath)
+	Folder_VariableFolderPath := ReplacePlaceholderStrings(Folder_VariableFolderPath)
+	File_CreateWithName := CleanUpPathString(File_CreateWithName)
+	File_CreateWithName := ReplacePlaceholderStrings(File_CreateWithName)
+	; File_CreateWithName := Trim(File_CreateWithName)
 
 	if (FolderOperation =="Open_Create")
 	{
@@ -1315,7 +1454,7 @@ CreateOpenFolder(BaseFolderPath, LocationName, FolderOperation, Folder_VariableF
 		{
 			if (FolderOperation == "Open_Folder")
 			{
-				MsgBox, 36, %WinEnvName%Open Folder, Open %FolderFullPath%?`nNo window with that title found, open? 
+				MsgBox, 36, %WinEnvName%Open Folder, Open [%LocationName%] `nPath: %FolderFullPath% `nNo window with that title found, open? 
 				IfMsgBox Yes
 				{
 					; NOTE: Check RunWithNoElevation() warnings if this ever gets implemented
@@ -1372,6 +1511,11 @@ CreateOpenFolder(BaseFolderPath, LocationName, FolderOperation, Folder_VariableF
 
 
 CheckCreateOpenFile(FolderPath, CreatedFileName, LocationName:="", ConfirmFileCreation:=false,  ConfirmFileOpening:=false, FolderSlotID:=""){
+	; <== {PLACEHOLDER VARIABLE ENABLED} ==>
+	FolderPath := CleanUpPathString(FolderPath)
+	FolderPath := ReplacePlaceholderStrings(FolderPath)
+	CreatedFileName := CleanUpPathString(CreatedFileName)
+	CreatedFileName := ReplacePlaceholderStrings(CreatedFileName)
 	FullFileName = %FolderPath%\%CreatedFileName%
 
 	if (LocationName=="")
@@ -1425,6 +1569,8 @@ CheckCreateOpenFile(FolderPath, CreatedFileName, LocationName:="", ConfirmFileCr
 
 
 ProcessRegExReplaceText_X(IdOrLabel:=""){
+	; <== {PLACEHOLDER VARIABLE ENABLED} ==>
+	; Placeholder replace done at nested function RunRegExReplaceText()
 	ReplaceTextSlotLabelFound := false
 	IniRead, MaxReplaceTextSlots, %IniSettingsFilePath%, GeneralSettings, RegExReplaceText_X-MaxReplaceTextSlots
 	If (MaxReplaceTextSlots == "ERROR")
@@ -1599,6 +1745,8 @@ ProcessRegExReplaceText_X(IdOrLabel:=""){
 }
 
 RunRegExReplaceText(ReplaceTextName, ReplaceTextDescription, RegExString, ReplaceString, ReplaceTextOperation){
+	; <== {PLACEHOLDER VARIABLE ENABLED} ==>
+
 	InputBox, BaseText, %WinEnvName%Enter text for %ReplaceTextName% text replace:,Description: %ReplaceTextDescription%
 
 	if ErrorLevel
@@ -1607,7 +1755,7 @@ RunRegExReplaceText(ReplaceTextName, ReplaceTextDescription, RegExString, Replac
 		Return
 	}
 
-	; RegExMatch(BaseText,RegExString,ReplacedText)
+	ReplaceString := ReplacePlaceholderStrings(ReplaceString)
 	ReplacedText := RegExReplace(BaseText,RegExString,ReplaceString)
 
 	if ErrorLevel

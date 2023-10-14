@@ -14,7 +14,27 @@
 	RegExReplaceText_X-MaxReplaceTextSlots=100
 	BrowsersProfile-DefaultProfile="Default"
 
-
+[UserDefinedPaths]
+	# Trailing backslash character will be removed, include proper backslash when using these placeholders below at this .ini file
+	A_MyDocuments_Path="C:\Users\USER1\Documents"
+	A_Downloads_Path="C:\USER1\hugog\Downloads"
+	A_ProgramFiles_Path="C:\Program Files"
+	A_ProgramFiles_x86_Path="C:\Program Files (x86)"
+	A_UserFolder_Path="C:\Users\USER1"
+	A_User_Defined_Path_1="C:\TestFolder"
+	A_User_Defined_Path_2="C:\Portable_Apps"
+	A_User_Defined_Path_3="C:\Users\USER1\OneDrive"
+	A_User_Defined_Path_4=""
+	A_User_Defined_Path_5=""
+	A_User_Defined_Path_6=""
+	A_User_Defined_Path_7=""
+	A_User_Defined_Path_8=""
+	A_User_Defined_Path_9=""
+	A_User_Defined_Path_10=""
+	A_User_Defined_Path_11=""
+	A_User_Defined_Path_12=""
+	# PLACE path placeholders like this:
+	# "{A_MyDocuments_Path} -- {A_Downloads_Path} -- {A_ProgramFiles_Path} -- {A_ProgramFiles_x86_Path} -- {A_UserFolder_Path} -- {A_User_Defined_Path_1} -- {A_User_Defined_Path_2} -- {A_User_Defined_Path_3} -- {A_User_Defined_Path_4} -- {A_User_Defined_Path_5} -- {A_User_Defined_Path_6} -- {A_User_Defined_Path_7} -- {A_User_Defined_Path_8} -- {A_User_Defined_Path_9} -- {A_User_Defined_Path_10} -- {A_User_Defined_Path_11} -- {A_User_Defined_Path_12} "
 # Leaving this for information, although most users won't really need this function
 [VPNSettings]
 	ClientIP=""
@@ -24,8 +44,8 @@
 	VpnName="Super Secret VPN"
 
 [BrowsersProfiles]
-	Default-DefinedBrowserExe="C:\Program Files\Google\Chrome\Application\chrome.exe"
-	Default-DefinedBrowserPath="C:\Program Files\Google\Chrome\Application\"
+	Default-DefinedBrowserExe="{A_ProgramFiles_Path}\Google\Chrome\Application\chrome.exe"
+	Default-DefinedBrowserPath="{A_ProgramFiles_Path}\Google\Chrome\Application\"
 	Default-DefinedBrowserUserProfile="--profile-directory="Default" "
 	Default-DefinedBrowserNewWindowArg="--new-window "
 	Default-DefinedBrowserNewTabArg=""
@@ -33,8 +53,8 @@
 	Default-DefinedBrowserArguments2=""
 	Default-DefinedBrowserArguments3=""
 
-	WebAsApp-DefinedBrowserExe="C:\Program Files\Google\Chrome\Application\chrome.exe"
-	WebAsApp-DefinedBrowserPath="C:\Program Files\Google\Chrome\Application\"
+	WebAsApp-DefinedBrowserExe="{A_ProgramFiles_Path}\Google\Chrome\Application\chrome.exe"
+	WebAsApp-DefinedBrowserPath="{A_ProgramFiles_Path}\Google\Chrome\Application\"
 	WebAsApp-DefinedBrowserUserProfile="--profile-directory="Default" "
 	WebAsApp-DefinedBrowserRunAsAdmin=""
 	WebAsApp-DefinedBrowserNewWindowArg=""
@@ -44,19 +64,19 @@
 	WebAsApp-DefinedBrowserArguments3=""
 
 [CreateOpenFolder]
-	BaseFolderPath1="C:\Users\ExampleUser\MyDocuments"
+	BaseFolderPath1="{A_UserFolder_Path}\MyDocuments"
 	LocationName1="Documents"
 	FolderOperation1="Open_Create"
 
-	BaseFolderPath2="C:\Users\ExampleUser\Downloads"
+	BaseFolderPath2="{A_UserFolder_Path}\Downloads"
 	LocationName2="Downloads folder"
 	FolderOperation2="Open_Folder"
 
-	BaseFolderPath3="C:\Users\ExampleUser\OneDrive"
+	BaseFolderPath3="{A_User_Defined_Path_3}"
 	LocationName3="OneDrive"
 	FolderOperation3="Open_Folder"
 
-	BaseFolderPath4="C:\Users\ExampleUser\Downloads"
+	BaseFolderPath4="{A_UserFolder_Path}\Downloads"
 	LocationName4="Downloads folder"
 	FolderOperation4="Open_Folder"
 
@@ -89,24 +109,24 @@
 	AIMP-AhkExeName="ahk_exe AIMP.exe"
 	AIMP-AhkGroupName="AIMPInstances"
 	AIMP-ProgramName="AIMP"
-	AIMP-CommandExe="C:\Program Files\AIMP\App\AIMP\AIMP.exe"
-	AIMP-CommandPath="C:\Program Files\AIMP\App\AIMP"
+	AIMP-CommandExe="{A_ProgramFiles_Path}\AIMP\App\AIMP\AIMP.exe"
+	AIMP-CommandPath="{A_ProgramFiles_Path}\AIMP\App\AIMP"
 	AIMP-CommandArgs=
 	AIMP-RunAsAdmin="no"
 
 	St3-AhkExeName="ahk_exe sublime_text.exe"
 	St3-AhkGroupName="SublimeTextInstances"
 	St3-ProgramName="Sublime Text"
-	St3-CommandExe="C:\Program Files\Sublime Text\sublime_text.exe"
-	St3-CommandPath="C:\Program Files\Sublime Text\"
+	St3-CommandExe="{A_ProgramFiles_Path}\Sublime Text\sublime_text.exe"
+	St3-CommandPath="{A_ProgramFiles_Path}\Sublime Text\"
 	St3-CommandArgs=
 	St3-RunAsAdmin="no"
 
 	ZimWiki-AhkExeName="ahk_exe zim.exe"
 	ZimWiki-AhkGroupName="ZimWikiInstances"
 	ZimWiki-ProgramName="Zim Wiki"
-	ZimWiki-CommandExe="C:\Program Files\Zim Desktop Wiki\zim.exe"
-	ZimWiki-CommandPath="C:\Program Files\Zim Desktop Wiki\"
+	ZimWiki-CommandExe="{A_ProgramFiles_Path}\Zim Desktop Wiki\zim.exe"
+	ZimWiki-CommandPath="{A_ProgramFiles_Path}\Zim Desktop Wiki\"
 	ZimWiki-CommandArgs=""
 	ZimWiki-RunAsAdmin="no"
 
@@ -121,15 +141,15 @@
 	SlackDesktop-AhkExeName="ahk_exe slack.exe"
 	SlackDesktop-AhkGroupName="SlackInstances"
 	SlackDesktop-ProgramName="Slack Desktop App"
-	SlackDesktop-CommandExe="C:\Users\ExampleUser\AppData\Local\slack\slack.exe"
-	SlackDesktop-CommandPath="C:\Users\ExampleUser\AppData\Local\slack\"
+	SlackDesktop-CommandExe="{A_UserFolder_Path}\AppData\Local\slack\slack.exe"
+	SlackDesktop-CommandPath="{A_UserFolder_Path}\AppData\Local\slack\"
 	SlackDesktop-CommandArgs=""
 	SlackDesktop-RunAsAdmin="no"
 
 
 [ShowOrRunWebSite]
-	WebSlack-BrowserExe="C:\Program Files\Google\Chrome\Application\chrome.exe"
-	WebSlack-BrowserPath="C:\Program Files\Google\Chrome\Application\"
+	WebSlack-BrowserExe="{A_ProgramFiles_Path}\Google\Chrome\Application\chrome.exe"
+	WebSlack-BrowserPath="{A_ProgramFiles_Path}\Google\Chrome\Application\"
 	WebSlack-AhkSearchWindowTitle="Slack |"
 	WebSlack-AhkGroupName="WebSlackInstances"
 	WebSlack-SiteName="Slack Web App"
@@ -141,8 +161,8 @@
 	WebSlack-Arguments6=""
 	WebSlack-RunAsAdmin="no"
 	
-	WS-BrowserExe="C:\Program Files\Google\Chrome\Application\chrome.exe"
-	WS-BrowserPath="C:\Program Files\Google\Chrome\Application\"
+	WS-BrowserExe="{A_ProgramFiles_Path}\Google\Chrome\Application\chrome.exe"
+	WS-BrowserPath="{A_ProgramFiles_Path}\Google\Chrome\Application\"
 	WS-AhkSearchWindowTitle="WhatsApp"
 	WS-AhkGroupName="WSInstances"
 	WS-SiteName="WhatsApp Web"
@@ -154,8 +174,8 @@
 	WS-Arguments6=""
 	WS-RunAsAdmin="no"
 
-	SngMeet-BrowserExe="C:\Program Files\Google\Chrome\Application\chrome.exe"
-	SngMeet-BrowserPath="C:\Program Files\Google\Chrome\Application\"
+	SngMeet-BrowserExe="{A_ProgramFiles_Path}\Google\Chrome\Application\chrome.exe"
+	SngMeet-BrowserPath="{A_ProgramFiles_Path}\Google\Chrome\Application\"
 	SngMeet-AhkSearchWindowTitle="Sangoma Meet"
 	SngMeet-AhkGroupName="SMeetInstances"
 	SngMeet-SiteName="Sangoma Meet"
@@ -184,28 +204,28 @@
 	# Folder slots for ProcessFolderSlot_X function
 	# Numeric _ID must be unique for each folderslot under this section
 	# USER FOLDERS (you can repeat same folder path with different Labels, see 22 and 25)
-	BaseFolderPath_21="C:\Users\ExampleUser\OneDrive"
+	BaseFolderPath_21="{A_UserFolder_Path}\OneDrive"
 	LocationName_21="OneDrive"
 	FolderLabel_21="CLD"
 	FolderOperation_21="Open_Folder"
 
-	BaseFolderPath_22="C:\Users\ExampleUser\Downloads"
+	BaseFolderPath_22="{A_UserFolder_Path}\Downloads"
 	LocationName_22="Downloads folder"
 	FolderLabel_22="Downloads"
 	FolderOperation_22="Open_Folder"
 
-	BaseFolderPath_23="C:\Users\ExampleUser\OneDrive\Documents"
+	BaseFolderPath_23="{A_UserFolder_Path}\OneDrive\Documents"
 	LocationName_23="Documents folder"
 	FolderLabel_23="Docs"
 	FolderOperation_23="Open_Folder"
 
-	BaseFolderPath_25="C:\Users\ExampleUser\Downloads"
+	BaseFolderPath_25="{A_UserFolder_Path}\Downloads"
 	LocationName_25="Downloads folder"
 	FolderLabel_25="DN"
 	FolderOperation_25="Open_Folder"
 
 	# NEW  parameters for the `Open_Create_Folder_And_File` mode
-	BaseFolderPath_1="C:\"
+	BaseFolderPath_1="{A_UserFolder_Path}"
 	LocationName_1="Personal documents folder"
 	FolderLabel_1="docs"
 	FolderOperation_1="Open_Create_Folder_And_File"
