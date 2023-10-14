@@ -482,6 +482,42 @@ SearchAndClose(WindowTitle,CloseCommand){
 	}
 }
 
+
+AddIPtoRoute() {
+	IniRead, VpnName, %IniSettingsFilePath%, VPNSettings, VpnName
+	InputBox, ClientServer, %WinEnvName%Enter the client's IP or FQDN, This will add the IP to the IP route for the %VpnName% 
+	if ErrorLevel
+			; MsgBox, CANCEL was pressed. ; [HGE] (DEBUG) Uncomment_for_tests 
+			Return
+	else
+		{
+			; MsgBox, You entered "%UserInput%"
+			if (ValidateIP(Trim(ClientServer)))
+			{
+				; If it's an IP address, add it directly
+				ClientIP := ClientServer
+				RunAddCommand(ClientIP, Mask, Gateway)
+			}	
+			else
+			{
+				; If not an IP, attempt to determine FQDN and add it 
+				; UNCOMMENT AFTER TESTS 
+				ClientIP := FQDN_to_IP(Trim(ClientServer)) ; [HGE] Comment_for_tests 
+				; MsgBox, Attempting to get FQDN ; [HGE] (DEBUG) Uncomment_for_tests 
+				PingResult := FQDN_to_IP(ClientServer)
+				if (PingResult == "NO_ERROR")
+				{
+					; MsgBox, %ClientIP% ; [HGE] (DEBUG) Uncomment_for_tests 
+					RunAddCommand(ClientIP, Mask, Gateway)
+					clipboard = %ClientIP%
+				}
+				else 
+				MsgBox, 0, %WinEnvName%Invalid IP or FQDN, %PingResult%
+					
+			}
+		}
+}
+
 ShowOrRunProgram(ProgramNameId){
 	; <== {PLACEHOLDER VARIABLE ENABLED} ==>	
 	; Unified all functions for individual programs into sigle re-usable function, taking the parameters from SCRIPT.INI file	
@@ -917,40 +953,6 @@ ShowOpenWebSiteWithInput(WebSiteWithInputNameId){
 		return
 }
 
-AddIPtoRoute() {
-	IniRead, VpnName, %IniSettingsFilePath%, VPNSettings, VpnName
-	InputBox, ClientServer, %WinEnvName%Enter the client's IP or FQDN, This will add the IP to the IP route for the %VpnName% 
-	if ErrorLevel
-			; MsgBox, CANCEL was pressed. ; [HGE] (DEBUG) Uncomment_for_tests 
-			Return
-	else
-		{
-			; MsgBox, You entered "%UserInput%"
-			if (ValidateIP(Trim(ClientServer)))
-			{
-				; If it's an IP address, add it directly
-				ClientIP := ClientServer
-				RunAddCommand(ClientIP, Mask, Gateway)
-			}	
-			else
-			{
-				; If not an IP, attempt to determine FQDN and add it 
-				; UNCOMMENT AFTER TESTS 
-				ClientIP := FQDN_to_IP(Trim(ClientServer)) ; [HGE] Comment_for_tests 
-				; MsgBox, Attempting to get FQDN ; [HGE] (DEBUG) Uncomment_for_tests 
-				PingResult := FQDN_to_IP(ClientServer)
-				if (PingResult == "NO_ERROR")
-				{
-					; MsgBox, %ClientIP% ; [HGE] (DEBUG) Uncomment_for_tests 
-					RunAddCommand(ClientIP, Mask, Gateway)
-					clipboard = %ClientIP%
-				}
-				else 
-				MsgBox, 0, %WinEnvName%Invalid IP or FQDN, %PingResult%
-					
-			}
-		}
-}
 
 
 RunAddCommand(IP, Mask, Gateway) {
