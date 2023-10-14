@@ -437,7 +437,6 @@ ToggleAlwaysOnTop(){
 	return
 }
 
-
 WrittenPaste(){
 	; Send clipboard contents as keystrokes, useful when you can't paste into browsers or remote consoles 
 	SendInput, {Raw}%Clipboard%
@@ -482,7 +481,6 @@ SearchAndClose(WindowTitle,CloseCommand){
 	}
 }
 
-
 AddIPtoRoute() {
 	IniRead, VpnName, %IniSettingsFilePath%, VPNSettings, VpnName
 	InputBox, ClientServer, %WinEnvName%Enter the client's IP or FQDN, This will add the IP to the IP route for the %VpnName% 
@@ -517,6 +515,150 @@ AddIPtoRoute() {
 			}
 		}
 }
+
+RunAddCommand(IP, Mask, Gateway) {
+	; route ADD [customer_IP] MASK 255.255.255.255 10.224.50.1
+	RunWait, *runas %ComSpec% /c "route add %IP% MASK %Mask% %Gateway% > route_add.result" , , hide UseErrorLevel
+	fileread , IPAddResult, route_add.result
+	FileDelete, route_add.result 
+	; MsgBox, %WinEnvName%%IPAddResult%
+	If (IPAddResult = "")
+		MsgBox, %WinEnvName%IP could not be added, probably it's already in Route Table
+	Else
+		MsgBox, %WinEnvName%IP address added %IPAddResult% 
+}
+
+ValidateIP(ByRef IPAddress) {
+	if (StrLen(IPAddress) > 15)
+		Valid=0
+
+	IfInString, IPAddress, %A_Space%
+		Valid=0
+
+	StringSplit, Octets, IPAddress, .
+	if (Octets0 <> 4)
+		Valid=0
+	else if (Octets1 < 1 || Octets1 > 255)
+		Valid=0
+	else if (Octets2 < 0 || Octets2 > 255)
+		Valid=0
+	else if (Octets3 < 0 || Octets3 > 255)
+		Valid=0
+	else if (Octets4 < 0 || Octets4 > 255)
+		Valid=0
+	else Valid=1
+
+	Oct1:=Octets1*0
+	Oct2:=Octets2*0
+	Oct3:=Octets3*0
+	Oct4:=Octets4*0
+
+	if (Oct1 <> 0 || Oct2 <> 0 || Oct3 <> 0 || Oct4 <> 0)
+		Valid=0
+
+	return %Valid%
+}
+
+FQDN_to_IP(ByRef FQDN) { 
+	; Convert FQDN to IP (may work almost always...)
+	; FQDN=http://www.google.com
+	; FQDN=192.168.122.1
+	; FQDN=HeaderGarble http://www.yahoo.co.uk/forum/posting.php?mode=newtopic&f=1EndingGarbleEtc 
+
+	; Reference: https://www.autohotkey.com/docs/misc/RegEx-QuickRef.htm
+	http_remove = i)^.*https?\:?\/\/
+	FQDN := RegExReplace(FQDN, http_remove, "")
+	
+	url_clean = i)\:.*|\/.*|\?.*
+	FQDN := RegExReplace(FQDN, url_clean, "")
+
+	; MsgBox, %FQDN% ; [HGE] (DEBUG) Uncomment_for_tests 
+	; Attempting to obtain the IP from FQDN >>>> 
+	RunWait, *runas %ComSpec% /c "ping %FQDN% -n 1 -w 300> ping.result" , , hide UseErrorLevel
+	fileread , PingResult, ping.result
+	FileDelete,ping.result
+
+	PingError := RegExMatch(txt,"Request timed out.")
+	if PingError
+	{
+		; MsgBox, Request timed out.
+		PingError = Request timed out.
+		return %PingError%
+	}
+	else
+	{
+		PingError := RegExMatch(PingResult,"Ping request could not find host")
+		if PingError
+		{
+			; MsgBox, Request could not find host.
+			PingError = Request could not find host.
+			return %PingError%
+		}
+		else
+		{
+			PingError := RegExMatch(PingResult,"Reply from")
+			if PingError
+			{
+				; RegExMatch(PingResult, "Pinging (.*?) ", Url)
+				RegExMatch(PingResult, "Ping statistics for (.*?):", Ip)
+				; RegExMatch(PingResult, "(Minimum = .*?), (Maximum = .*?), (Average = .*?$)", triptimes)
+				PingError = NO_ERROR
+				ClientIP := Ip1
+				; MsgBox, %ClientIP%
+				; MsgBox, % PingResult
+				return %PingError%
+			}
+			else 
+			{
+				PingError = OTHER_ERROR
+				return %PingError%
+			}
+		}
+	}
+}
+
+RunWithNoElevation(Target, Arguments, WorkingDirectory){
+	; Taken from: https://autohotkey.com/board/topic/79136-run-as-normal-user-not-as-admin-when-user-is-admin/
+	static TASK_TRIGGER_REGISTRATION := 7   ; trigger on registration. 
+	static TASK_ACTION_EXEC := 0  ; specifies an executable action. 
+	static TASK_CREATE := 2
+	static TASK_RUNLEVEL_LUA := 0
+	static TASK_LOGON_INTERACTIVE_TOKEN := 3
+	objService := ComObjCreate("Schedule.Service") 
+	objService.Connect() 
+
+	objFolder := objService.GetFolder("") 
+	objTaskDefinition := objService.NewTask(0) 
+
+	principal := objTaskDefinition.Principal 
+	principal.LogonType := TASK_LOGON_INTERACTIVE_TOKEN    ; Set the logon type to TASK_LOGON_PASSWORD 
+	principal.RunLevel := TASK_RUNLEVEL_LUA  ; Tasks will be run with the least privileges. 
+
+	colTasks := objTaskDefinition.Triggers
+	objTrigger := colTasks.Create(TASK_TRIGGER_REGISTRATION) 
+	endTime += 1, Minutes  ;end time = 1 minutes from now 
+	FormatTime,endTime,%endTime%,yyyy-MM-ddTHH`:mm`:ss
+	objTrigger.EndBoundary := endTime
+	colActions := objTaskDefinition.Actions 
+	objAction := colActions.Create(TASK_ACTION_EXEC) 
+	objAction.ID := "7plus run" 
+	objAction.Path := Target
+	objAction.Arguments := Arguments
+	objAction.WorkingDirectory := WorkingDirectory ? WorkingDirectory : A_WorkingDir
+	objInfo := objTaskDefinition.RegistrationInfo
+	objInfo.Author := "7plus" 
+	objInfo.Description := "Runs a program as non-elevated user" 
+	objSettings := objTaskDefinition.Settings 
+	objSettings.Enabled := True 
+	objSettings.Hidden := False 
+	objSettings.DeleteExpiredTaskAfter := "PT0S"
+	objSettings.StartWhenAvailable := True 
+	objSettings.ExecutionTimeLimit := "PT0S"
+	objSettings.DisallowStartIfOnBatteries := False
+	objSettings.StopIfGoingOnBatteries := False
+	objFolder.RegisterTaskDefinition("", objTaskDefinition, TASK_CREATE , "", "", TASK_LOGON_INTERACTIVE_TOKEN ) 
+}
+
 
 ShowOrRunProgram(ProgramNameId){
 	; <== {PLACEHOLDER VARIABLE ENABLED} ==>	
@@ -583,7 +725,6 @@ ShowOrRunProgram(ProgramNameId){
 		}
 	}
 }
-
 
 ShowOrRunWebSite(WebSiteNameId){
 	; <== {PLACEHOLDER VARIABLE ENABLED} ==>
@@ -953,111 +1094,6 @@ ShowOpenWebSiteWithInput(WebSiteWithInputNameId){
 		return
 }
 
-
-
-RunAddCommand(IP, Mask, Gateway) {
-	; route ADD [customer_IP] MASK 255.255.255.255 10.224.50.1
-	RunWait, *runas %ComSpec% /c "route add %IP% MASK %Mask% %Gateway% > route_add.result" , , hide UseErrorLevel
-	fileread , IPAddResult, route_add.result
-	FileDelete, route_add.result 
-	; MsgBox, %WinEnvName%%IPAddResult%
-	If (IPAddResult = "")
-		MsgBox, %WinEnvName%IP could not be added, probably it's already in Route Table
-	Else
-		MsgBox, %WinEnvName%IP address added %IPAddResult% 
-}
-
-
-ValidateIP(ByRef IPAddress) {
-	if (StrLen(IPAddress) > 15)
-		Valid=0
-
-	IfInString, IPAddress, %A_Space%
-		Valid=0
-
-	StringSplit, Octets, IPAddress, .
-	if (Octets0 <> 4)
-		Valid=0
-	else if (Octets1 < 1 || Octets1 > 255)
-		Valid=0
-	else if (Octets2 < 0 || Octets2 > 255)
-		Valid=0
-	else if (Octets3 < 0 || Octets3 > 255)
-		Valid=0
-	else if (Octets4 < 0 || Octets4 > 255)
-		Valid=0
-	else Valid=1
-
-	Oct1:=Octets1*0
-	Oct2:=Octets2*0
-	Oct3:=Octets3*0
-	Oct4:=Octets4*0
-
-	if (Oct1 <> 0 || Oct2 <> 0 || Oct3 <> 0 || Oct4 <> 0)
-		Valid=0
-
-	return %Valid%
-}
-
-
-FQDN_to_IP(ByRef FQDN) { 
-	; Convert FQDN to IP (may work almost always...)
-	; FQDN=http://www.google.com
-	; FQDN=192.168.122.1
-	; FQDN=HeaderGarble http://www.yahoo.co.uk/forum/posting.php?mode=newtopic&f=1EndingGarbleEtc 
-
-	; Reference: https://www.autohotkey.com/docs/misc/RegEx-QuickRef.htm
-	http_remove = i)^.*https?\:?\/\/
-	FQDN := RegExReplace(FQDN, http_remove, "")
-	
-	url_clean = i)\:.*|\/.*|\?.*
-	FQDN := RegExReplace(FQDN, url_clean, "")
-
-	; MsgBox, %FQDN% ; [HGE] (DEBUG) Uncomment_for_tests 
-	; Attempting to obtain the IP from FQDN >>>> 
-	RunWait, *runas %ComSpec% /c "ping %FQDN% -n 1 -w 300> ping.result" , , hide UseErrorLevel
-	fileread , PingResult, ping.result
-	FileDelete,ping.result
-
-	PingError := RegExMatch(txt,"Request timed out.")
-	if PingError
-	{
-		; MsgBox, Request timed out.
-		PingError = Request timed out.
-		return %PingError%
-	}
-	else
-	{
-		PingError := RegExMatch(PingResult,"Ping request could not find host")
-		if PingError
-		{
-			; MsgBox, Request could not find host.
-			PingError = Request could not find host.
-			return %PingError%
-		}
-		else
-		{
-			PingError := RegExMatch(PingResult,"Reply from")
-			if PingError
-			{
-				; RegExMatch(PingResult, "Pinging (.*?) ", Url)
-				RegExMatch(PingResult, "Ping statistics for (.*?):", Ip)
-				; RegExMatch(PingResult, "(Minimum = .*?), (Maximum = .*?), (Average = .*?$)", triptimes)
-				PingError = NO_ERROR
-				ClientIP := Ip1
-				; MsgBox, %ClientIP%
-				; MsgBox, % PingResult
-				return %PingError%
-			}
-			else 
-			{
-				PingError = OTHER_ERROR
-				return %PingError%
-			}
-		}
-	}
-}
-
 ProcessFolderSlot_X(IdOrLabel:=""){
 	; <== {PLACEHOLDER VARIABLE ENABLED} ==>
 	FolderSlotLabelFound := false
@@ -1347,7 +1383,6 @@ ProcessFolderSlot(){
 		CreateOpenFolder(BaseFolderPath, LocationName, FolderOperation)
 }
 
-
 CreateOpenFolder(BaseFolderPath, LocationName, FolderOperation, Folder_VariableFolderPath:="", File_CreateWithName:="", FolderSlotID:=""){
 	; <== {PLACEHOLDER VARIABLE ENABLED} ==>
 	VariableFolderPath_StartChar := ""
@@ -1511,7 +1546,6 @@ CreateOpenFolder(BaseFolderPath, LocationName, FolderOperation, Folder_VariableF
 	}
 }
 
-
 CheckCreateOpenFile(FolderPath, CreatedFileName, LocationName:="", ConfirmFileCreation:=false,  ConfirmFileOpening:=false, FolderSlotID:=""){
 	; <== {PLACEHOLDER VARIABLE ENABLED} ==>
 	FolderPath := CleanUpPathString(FolderPath)
@@ -1568,7 +1602,6 @@ CheckCreateOpenFile(FolderPath, CreatedFileName, LocationName:="", ConfirmFileCr
 
 	Run, %FullFileName%
 }
-
 
 ProcessRegExReplaceText_X(IdOrLabel:=""){
 	; <== {PLACEHOLDER VARIABLE ENABLED} ==>
@@ -1776,45 +1809,3 @@ RunRegExReplaceText(ReplaceTextName, ReplaceTextDescription, RegExString, Replac
 	}
 }
 
-
-RunWithNoElevation(Target, Arguments, WorkingDirectory){
-	; Taken from: https://autohotkey.com/board/topic/79136-run-as-normal-user-not-as-admin-when-user-is-admin/
-	static TASK_TRIGGER_REGISTRATION := 7   ; trigger on registration. 
-	static TASK_ACTION_EXEC := 0  ; specifies an executable action. 
-	static TASK_CREATE := 2
-	static TASK_RUNLEVEL_LUA := 0
-	static TASK_LOGON_INTERACTIVE_TOKEN := 3
-	objService := ComObjCreate("Schedule.Service") 
-	objService.Connect() 
-
-	objFolder := objService.GetFolder("") 
-	objTaskDefinition := objService.NewTask(0) 
-
-	principal := objTaskDefinition.Principal 
-	principal.LogonType := TASK_LOGON_INTERACTIVE_TOKEN    ; Set the logon type to TASK_LOGON_PASSWORD 
-	principal.RunLevel := TASK_RUNLEVEL_LUA  ; Tasks will be run with the least privileges. 
-
-	colTasks := objTaskDefinition.Triggers
-	objTrigger := colTasks.Create(TASK_TRIGGER_REGISTRATION) 
-	endTime += 1, Minutes  ;end time = 1 minutes from now 
-	FormatTime,endTime,%endTime%,yyyy-MM-ddTHH`:mm`:ss
-	objTrigger.EndBoundary := endTime
-	colActions := objTaskDefinition.Actions 
-	objAction := colActions.Create(TASK_ACTION_EXEC) 
-	objAction.ID := "7plus run" 
-	objAction.Path := Target
-	objAction.Arguments := Arguments
-	objAction.WorkingDirectory := WorkingDirectory ? WorkingDirectory : A_WorkingDir
-	objInfo := objTaskDefinition.RegistrationInfo
-	objInfo.Author := "7plus" 
-	objInfo.Description := "Runs a program as non-elevated user" 
-	objSettings := objTaskDefinition.Settings 
-	objSettings.Enabled := True 
-	objSettings.Hidden := False 
-	objSettings.DeleteExpiredTaskAfter := "PT0S"
-	objSettings.StartWhenAvailable := True 
-	objSettings.ExecutionTimeLimit := "PT0S"
-	objSettings.DisallowStartIfOnBatteries := False
-	objSettings.StopIfGoingOnBatteries := False
-	objFolder.RegisterTaskDefinition("", objTaskDefinition, TASK_CREATE , "", "", TASK_LOGON_INTERACTIVE_TOKEN ) 
-}
