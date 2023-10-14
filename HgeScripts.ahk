@@ -726,94 +726,6 @@ ShowOrRunProgram(ProgramNameId){
 	}
 }
 
-ShowOrRunWebSite(WebSiteNameId){
-	; <== {PLACEHOLDER VARIABLE ENABLED} ==>
-	; Unified all functions for individual programs into sigle re-usable function, taking the parameters from SCRIPT.INI file	
-	IniRead, BrowserExe, %IniSettingsFilePath%, ShowOrRunWebSite, %WebSiteNameId%-BrowserExe
-	; Sanitize string with ReplacePlaceholderStrings()
-	BrowserExe := ReplacePlaceholderStrings(BrowserExe)
-
-	IniRead, BrowserPath, %IniSettingsFilePath%, ShowOrRunWebSite, %WebSiteNameId%-BrowserPath
-	; Sanitize string with ReplacePlaceholderStrings()
-	BrowserPath := ReplacePlaceholderStrings(BrowserPath)
-
-	IniRead, AhkSearchWindowTitle, %IniSettingsFilePath%, ShowOrRunWebSite, %WebSiteNameId%-AhkSearchWindowTitle
-	; Sanitize string with ReplacePlaceholderStrings()
-	AhkSearchWindowTitle := ReplacePlaceholderStrings(AhkSearchWindowTitle)
-
-	IniRead, AhkGroupName, %IniSettingsFilePath%, ShowOrRunWebSite, %WebSiteNameId%-AhkGroupName
-	; Sanitize string with ReplacePlaceholderStrings()
-	AhkGroupName := ReplacePlaceholderStrings(AhkGroupName)
-
-	IniRead, SiteName, %IniSettingsFilePath%, ShowOrRunWebSite, %WebSiteNameId%-SiteName
-	; Sanitize string with ReplacePlaceholderStrings()
-	SiteName := ReplacePlaceholderStrings(SiteName)
-
-	IniRead, Arguments1, %IniSettingsFilePath%, ShowOrRunWebSite, %WebSiteNameId%-Arguments1
-	; Sanitize string with ReplacePlaceholderStrings()
-	Arguments1 := ReplacePlaceholderStrings(Arguments1)
-
-	IniRead, Arguments2, %IniSettingsFilePath%, ShowOrRunWebSite, %WebSiteNameId%-Arguments2
-	; Sanitize string with ReplacePlaceholderStrings()
-	Arguments2 := ReplacePlaceholderStrings(Arguments2)
-
-	IniRead, Arguments3, %IniSettingsFilePath%, ShowOrRunWebSite, %WebSiteNameId%-Arguments3
-	; Sanitize string with ReplacePlaceholderStrings()
-	Arguments3 := ReplacePlaceholderStrings(Arguments3)
-
-	IniRead, Arguments4, %IniSettingsFilePath%, ShowOrRunWebSite, %WebSiteNameId%-Arguments4
-	; Sanitize string with ReplacePlaceholderStrings()
-	Arguments4 := ReplacePlaceholderStrings(Arguments4)
-
-	IniRead, Arguments5, %IniSettingsFilePath%, ShowOrRunWebSite, %WebSiteNameId%-Arguments5
-	; Sanitize string with ReplacePlaceholderStrings()
-	Arguments5 := ReplacePlaceholderStrings(Arguments5)
-
-	IniRead, Arguments6, %IniSettingsFilePath%, ShowOrRunWebSite, %WebSiteNameId%-Arguments6
-	; Sanitize string with ReplacePlaceholderStrings()
-	Arguments6 := ReplacePlaceholderStrings(Arguments6)
-
-
-	if ((BrowserExe == "ERROR") || (BrowserPath == "ERROR") || (AhkSearchWindowTitle == "ERROR") || (AhkGroupName == "ERROR") || (SiteName == "ERROR") || (Arguments1 == "ERROR") || (Arguments2 == "ERROR") || (Arguments3 == "ERROR") || (Arguments4 == "ERROR") || (Arguments5 == "ERROR") || (Arguments6 == "ERROR"))
-	{
-		MsgBox, ERROR... Missing parameters for ShowOrRunWebSite function check the "%IniSettingsFileName%" file
-		return 
-	}
-	; [PENDING]: implement Run as admin
-	; IniRead, RunAsAdmin, %IniSettingsFilePath%, ShowOrRunWebSite, %ProgramNameId%-RunAsAdmin
-
-	SetTitleMatchMode, 2
-	if WinExist(AhkSearchWindowTitle)
-	{   
-		; Multi-window approach
-		GroupAdd, %AhkGroupName%, %AhkSearchWindowTitle%
-		GroupActivate %AhkGroupName%
-	}
-	else
-	{
-		MsgBox, 36, %WinEnvName%Open %SiteName%?, No window with that title found, open new instance? 
-		IfMsgBox Yes
-		{
-
-			BrowserArgs := Arguments1 . Arguments2 . Arguments3 . Arguments4 . Arguments5 . Arguments6
-			
-			; Work-around not to run tasks as administrator since the Script itself needs to be run like that for other tasks 
-			; WARNING: RunWithNoElevation() may trigger alerts on some Antivirus software flagging it as:
-			; 	- Trojan.Multi.GenAutorunTask.b
-			; 	- PDM:Trojan.Win32.GenAutorunSchedulerTaskRun.b
-			; This is due to the function using svchost.exe to "program" the task to start the desired application or process.
-			if (RunScriptAsAdmin = "yes") 
-			{	
-				RunWithNoElevation(BrowserExe,BrowserArgs, BrowserPath)
-			}
-			else
-			{
-					Run %BrowserExe% %BrowserArgs%
-			}
-		}
-	}
-}
-
 ShowOpenWebSiteWithInput(WebSiteWithInputNameId){
 	; <== {PLACEHOLDER VARIABLE ENABLED} ==>	
 	IniRead, AhkSearchWindowTitle, %IniSettingsFilePath%, ShowOpenWebSiteWithInput, %WebSiteWithInputNameId%-AhkSearchWindowTitle
@@ -1278,109 +1190,26 @@ ProcessFolderSlot_X(IdOrLabel:=""){
 			FolderString := ProcessVariableInputString(MaxOpenCreateFolderAndFileInputs, "CreateOpenFolder_X", "Folder-", "_"FolderSlotID, LocationName, VariableFolderPath)
 			if (FolderString == "FUNCTION_EXITED_WITH_ERROR:1") ; User pressed CANCEL or ESC key at one of the input boxes
 			{
-				MsgBox, User pressed CANCEL
+				; MsgBox, User pressed CANCEL
 				return
 			}
 
-			FileNameString := ProcessVariableInputString(MaxOpenCreateFolderAndFileInputs, "CreateOpenFolder_X", "File-", "_"FolderSlotID, LocationName, VariableFileName)
-			if (FileNameString == "FUNCTION_EXITED_WITH_ERROR:1") ; User pressed CANCEL or ESC key at one of the input boxes
+			if (VariableFileName == "ERROR") ; Filename not set on .ini file
+				FileNameString := "ERROR"
+			else
 			{
-				MsgBox, User pressed CANCEL
-				return
+				FileNameString := ProcessVariableInputString(MaxOpenCreateFolderAndFileInputs, "CreateOpenFolder_X", "File-", "_"FolderSlotID, LocationName, VariableFileName)
+				if (FileNameString == "FUNCTION_EXITED_WITH_ERROR:1") ; User pressed CANCEL or ESC key at one of the input boxes
+				{
+					; MsgBox, User pressed CANCEL
+					return
+				}
 			}
 		}
 		
 		CreateOpenFolder(BaseFolderPath, LocationName, FolderOperation, FolderString, FileNameString, FolderSlotID)
 	; Label safe exit point: ProcessFolderSlot_X_ValidateData
 	return
-}
-
-ProcessFolderSlot(){
-	FolderSlot := 
-		Input, FolderSlot, "L1 T2", {Enter}, 1,2,3,4,5,6,7,8,9,0,E,e ;E and e will be used to list the folders currently mapped on ini file
-		if (ErrorLevel = "Max")
-		{
-				MsgBox,,%WinEnvName%Select a valid folder slot,
-					(LTrim Join
-						Only numbers [1-9]+0 can be entered, set the slots on "%IniSettingsFileName%" file.`n
-						Or press 'e' for the list of available slots
-					)
-				return
-		}
-		if (ErrorLevel = "Timeout")
-		{
-				MsgBox,,%WinEnvName%Select a valid folder slot,
-					(LTrim Join
-						Slots [1-9]+0 can be set up upon the "%IniSettingsFileName%" file.`n
-						Or press 'e' for the list of available slots
-					)
-				return
-		}
-		if (ErrorLevel = "NewInput")
-				return
-		If InStr(ErrorLevel, "EndKey:")
-		{
-				MsgBox,,%WinEnvName%Select a valid folder slot,
-					(LTrim Join
-						Only numbers [1-9]+0 can be entered, set the slots on "%IniSettingsFileName%" file.`n
-						Or press 'e' for the list of available slots
-					)
-				return
-		}
-
-		if (FolderSlot == "E" || FolderSlot == "e"){
-			; MsgBox, You pressed %FolderSlot%
-			FolderSlotIndex := 
-			FolderSlotsDescription := "=== Currently set folder Slots === `n`n"
-			Loop, 10
-			{
-				FolderSlotIndex := A_Index
-				if (A_Index == 10)
-				{
-					FolderSlotIndex := 0 
-				}
-				IniRead, LocationName, %IniSettingsFilePath%, CreateOpenFolder, LocationName%FolderSlotIndex%
-				FolderSlotsDescription .= " - Slot " FolderSlotIndex ": " LocationName "`n"
-				; Sleep, 100
-			}
-			MsgBox,32,%WinEnvName%List of set up folder slots,
-				( ;LTrim Join
-					%FolderSlotsDescription%
-				)
-			
-			return
-		;	for window in ComObjCreate("Shell.Application").Windows
-		;	windows .= window.LocationName " :: " window.LocationURL "`n"
-		; MsgBox % windows
-		}
-
-		IniRead, BaseFolderPath, %IniSettingsFilePath%, CreateOpenFolder, BaseFolderPath%FolderSlot%
-		IniRead, LocationName, %IniSettingsFilePath%, CreateOpenFolder, LocationName%FolderSlot%
-		IniRead, FolderOperation, %IniSettingsFilePath%, CreateOpenFolder, FolderOperation%FolderSlot%
-
-		
-		If ((BaseFolderPath == "ERROR") || (LocationName == "ERROR") || (FolderOperation == "ERROR"))
-		{
-			MsgBox, ERROR... SLOT %FolderSlot% variable not found, check the "%IniSettingsFileName%" file
-		}
-		If (BaseFolderPath == "")
-		{
-			MsgBox, SLOT %FolderSlot% is empty, set it on the "%IniSettingsFileName%" file
-			return
-		}
-
-		If (LocationName == "")
-		{
-			LocationName = %FolderSlot%
-		}
-
-		If (FolderOperation == "")
-		{
-			FolderOperation := "Open_Folder"
-		}
-		
-		; MsgBox, SLOT %FolderSlot% --> %BaseFolderPath% -- %LocationName% -- %FolderOperation%
-		CreateOpenFolder(BaseFolderPath, LocationName, FolderOperation)
 }
 
 CreateOpenFolder(BaseFolderPath, LocationName, FolderOperation, Folder_VariableFolderPath:="", File_CreateWithName:="", FolderSlotID:=""){
@@ -1395,6 +1224,8 @@ CreateOpenFolder(BaseFolderPath, LocationName, FolderOperation, Folder_VariableF
 	Folder_VariableFolderPath := ReplacePlaceholderStrings(Folder_VariableFolderPath)
 	File_CreateWithName := CleanUpPathString(File_CreateWithName)
 	File_CreateWithName := ReplacePlaceholderStrings(File_CreateWithName)
+	; MsgBox, %File_CreateWithName% ; [HGE] (DEBUG) Uncomment_for_tests
+
 	; File_CreateWithName := Trim(File_CreateWithName)
 
 	if (FolderOperation =="Open_Create")
@@ -1438,7 +1269,7 @@ CreateOpenFolder(BaseFolderPath, LocationName, FolderOperation, Folder_VariableF
 
 	else if (FolderOperation =="Open_Create_Folder_And_File")
 	{
-		if (Folder_VariableFolderPath<>"")
+		if ((Folder_VariableFolderPath<>"") && (Folder_VariableFolderPath<>"ERROR"))
 			TempFolderFullPath = %BaseFolderPath%\%Folder_VariableFolderPath%
 		; 		BaseFolderPath = %BaseFolderPath%\
 		else
@@ -1450,22 +1281,6 @@ CreateOpenFolder(BaseFolderPath, LocationName, FolderOperation, Folder_VariableF
 		FolderFullPath = %TempFolderFullPath%
 		ErrorLevel := false 
 
-		; MsgBox, Base folder path: %FolderFullPath% ; [HGE] (DEBUG) Uncomment_for_tests
-		; return 
-
-		; MsgBox, temp folder path %TempFolderFullPath% ; [HGE] (DEBUG) Uncomment_for_tests
-		; MsgBox, Folder name %FolderName% ; [HGE] (DEBUG) Uncomment_for_tests
-		; MsgBox, Full folder path %FolderFullPath% ; [HGE] (DEBUG) Uncomment_for_tests
-		; {
-
-		; }
-		; return ; test 2
-		; MsgBox, Base folder path: %BaseFolderPath% ; [HGE] (DEBUG) Uncomment_for_tests
-		; MsgBox, Variable folder path: %Folder_VariableFolderPath% ; [HGE] (DEBUG) Uncomment_for_tests
-		; MsgBox, File name: %File_CreateWithName% ; [HGE] (DEBUG) Uncomment_for_tests
-		
-		; MsgBox, Full folder path: %FolderFullPath% ; [HGE] (DEBUG) Uncomment_for_tests
-		; TEST RETURN!!
 	}
 	
 	; ABORT all below operations if user canceled input
@@ -1483,9 +1298,10 @@ CreateOpenFolder(BaseFolderPath, LocationName, FolderOperation, Folder_VariableF
 			WinActivate
 			if (FolderOperation == "Open_Create_Folder_And_File")
 			{
-				CheckCreateOpenFile(FolderFullPath, File_CreateWithName, LocationName, false,  false, FolderSlotID)
+				; MsgBox, test win activate ; [HGE] (DEBUG) Uncomment_for_tests
+				if (File_CreateWithName <> "ERROR") ; Filename not set on .ini file
+					CheckCreateOpenFile(FolderFullPath, File_CreateWithName, LocationName, false,  false, FolderSlotID)
 			}
-			; MsgBox, test win activate ; [HGE] (DEBUG) Uncomment_for_tests
 		}
 		else
 		{
@@ -1511,7 +1327,8 @@ CreateOpenFolder(BaseFolderPath, LocationName, FolderOperation, Folder_VariableF
 				; MsgBox, Opening requested window ; [HGE] (DEBUG) Uncomment_for_tests
 				Run, explorer.exe "%FolderFullPath%"
 				Sleep, 1200
-				CheckCreateOpenFile(FolderFullPath, File_CreateWithName, LocationName, false,  false, FolderSlotID)
+				if (File_CreateWithName <> "ERROR") ; Filename not set on .ini file
+					CheckCreateOpenFile(FolderFullPath, File_CreateWithName, LocationName, false,  false, FolderSlotID)
 
 			}
 		}
@@ -1533,7 +1350,13 @@ CreateOpenFolder(BaseFolderPath, LocationName, FolderOperation, Folder_VariableF
 
 	else if (FolderOperation == "Open_Create_Folder_And_File")
 	{
-		MsgBox, 36, %WinEnvName%Create new directory?, Directory path does not exists: `n%FolderFullPath% `n`nAlso new file '%File_CreateWithName%' will be created`nProceed? 
+		; MsgBox, %File_CreateWithName% ; [HGE] (DEBUG) Uncomment_for_tests
+		if (File_CreateWithName == "ERROR") ; Filename not set on .ini file
+			OpenCreateMessage = Directory path does not exists: `n%FolderFullPath% `nProceed?
+		else
+			OpenCreateMessage = Directory path does not exists: `n%FolderFullPath% `n`nAlso new file '%File_CreateWithName%' will be created`nProceed?
+	
+		MsgBox, 36, %WinEnvName%Create new directory?, %OpenCreateMessage% 
 		IfMsgBox Yes
 		{
 			FileCreateDir, %FolderFullPath%
@@ -1541,7 +1364,9 @@ CreateOpenFolder(BaseFolderPath, LocationName, FolderOperation, Folder_VariableF
 			; Copy text to Clipboard
 			clipboard = %FolderFullPath%
 			Sleep, 1200
-			CheckCreateOpenFile(FolderFullPath, File_CreateWithName, LocationName, false,  false, FolderSlotID)
+		
+			if (File_CreateWithName <> "ERROR") ; Filename not set on .ini file
+				CheckCreateOpenFile(FolderFullPath, File_CreateWithName, LocationName, false,  false, FolderSlotID)
 		}
 	}
 }
