@@ -1,7 +1,45 @@
-# Specify filepatterns you want git to ignore.
+# =========================
+# HGE specific files
+# =========================
+/.tests/
+/.reference/
 *.ini
-*.ahk_hotkeys
-.local/
+
+# =========================
+# Global Editor & IDE Files
+# =========================
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+# Optional: SFTP plugin config files to protect passwords
+sftp-config.json
+.sftp-config.json
+
+# Sublimerge / Merge Tools
+*.orig
+*.BACKUP.*
+*.BASE.*
+*.LOCAL.*
+*.REMOTE.*
+*_BACKUP_*
+*_BASE_*
+*_LOCAL_*
+*_REMOTE_*
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# JetBrains / IntelliJ
+.idea/
+*.iml
+
+# Vim
+*~
+*.swp
+*.swo
+
+
 # Compiled source #
 ###################
 *.com
@@ -30,12 +68,20 @@
 *.sql
 *.sqlite
 
-# OS generated files #
-######################
+# =========================
+# Operating System Files
+# =========================
+# macOS
 .DS_Store
 .DS_Store?
+.AppleDouble
+.LSOverride
 ._*
 .Spotlight-V100
 .Trashes
-ehthumbs.db
+
+# Windows
 Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
