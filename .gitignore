@@ -2,8 +2,10 @@
 # HGE specific files
 # =========================
 /.tests/
+/.local/
 /.reference/
 *.ini
+*.ahk_hotkeys
 
 # =========================
 # Global Editor & IDE Files
