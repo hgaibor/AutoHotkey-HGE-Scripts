@@ -4,6 +4,10 @@ Created by: Hugo Gaibor
 Date: 2019-Jan-25
 License: GNU/GPL3+
 
+> [!WARNING]
+> This repo won't receive any future updates as the code will be migrated to be compatible with Autohotkey v2 libraries.
+> Please check the new version on this repo: https://github.com/hgaibor/AHKv2-HGE-scripts 
+
 Github: https://github.com/hgaibor/AutoHotkey-HGE-Scripts
 
 Check the [usage guide](USAGE-GUIDE.md) for detailed script usage documentation.
@@ -24,6 +28,9 @@ This script will allow you to improve your daily tasks by assigning custom key m
 - Check `HgeScripts.ahk_hotkeys.example.txt` for some possible shortcuts that can be created using this tool
 
 ## History:
+ ### 2026-10-21
+  - Incorporated last fixes before refactor this code for AHKv2-HGE-scripts
+    
  ### 2023-09-18
   - NEW: Created new `ProcessRegExReplaceText_X([optional ID or Label])`. It will allow to create unlimited slots to set RegEx-based rules to replace characters or text with another determined variable. Similarly to folder slots, user-defined labels can be used. Slots this function will be defined at the `[RegExReplaceText_X] section`
   - Reformated `ProcessFolderSlot_X()` --> `ProcessFolderSlot_X([optional ID or Label])` funtion to allow direct calling to specific ID or label to map a specific slot into a direct hotkey if desired
