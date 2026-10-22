@@ -28,18 +28,47 @@ Menu, Tray, Add, Close Network Messages, LbSearchAndClose
 	; ^!r::Reload  ; Assign Ctrl-Alt-R as a hotkey to reload the script.
 	>+#r::Reload  ; Assign Right Shift-Windows-R as a hotkey to reload the script.
 	+#c::AddIPtoRoute() ; This function will add the IP to use the VPN route, parameters defined at the [VPNSettings] section
-	+#w::ShowOrRunWebSite("WS") ; Web WhatsApp
-	+#s::ShowOrRunWebSite("WebSlack") ; Slack as an app
+
+	; +#w::ShowOrRunWebSite("WS") ; DEPRECATED FUNCTION USE "ShowOpenWebSiteWithInput"
+	;+#s::ShowOrRunWebSite("WebSlack") ; DEPRECATED FUNCTION USE "ShowOpenWebSiteWithInput"
 	
-	^#s::ShowOrRunProgram("St3") ; SublimeText
-	+#a::ShowOrRunProgram("AIMP") 
-	+#z::ShowOrRunProgram("ZimWiki")
-	^#r::ShowOrRunProgram("WinRDP") ; Windows remote desktop
-	+#p::ShowOrRunProgram("Kitty") ; Putty alternative, very good
-	+#t::ShowOrRunProgram("TaskCoach")
-	>+#w::ShowOpenWebSiteWithInput("WsSend") ; Ask for mobile number, then incorporate it to a web URL
+	; SHOW OR RUN EXE PROGRAMS
+		^#s::ShowOrRunProgram("St3") ; SublimeText
+		^#a::ShowOrRunProgram("KittySessions")
+		+#a::ShowOrRunProgram("KittyConfig")
+		+#o::ShowOrRunProgram("Obsidian")
+		+#a::ShowOrRunProgram("AIMP") 
+		+#z::ShowOrRunProgram("ZimWiki")
+		^#r::ShowOrRunProgram("WinRDP") ; Windows remote desktop
+		+#p::ShowOrRunProgram("Kitty") ; Putty alternative, very good
+		+#t::ShowOrRunProgram("TaskCoach")
+
+	; WEB SITE SHORTCUTS
+		>+#w::ShowOpenWebSiteWithInput("WsSend") ; Ask for mobile number, then incorporate it to a web URL
+		+#g::ShowOpenWebSiteWithInput("Gemini")
+
+	; WHOIS Lookup sources
+		+#1::ShowOpenWebSiteWithInput("Whois1")
+		+#2::ShowOpenWebSiteWithInput("Whois2")
 	
-	#MButton:: ToggleAlwaysOnTop() ; Set an app to be always on top
+	; Mouse functions HOME and END emulation
+		!XButton1::Send {End}
+		+XButton1::Send {BackSpace}
+
+	; Mouse functions for ENTER and BACKSPACE emulation
+	!MButton:: Send {Enter} ; [HGE] Browser forward
+	!XButton2::Send {Home}
+
+	; Media key emulation to control playback
+	+#8:: Send, {Media_Prev}
+	+#9:: Send, {Media_Next}
+	+#p:: Send, {Media_Play_Pause}
+	+#0:: Send, {Media_Stop}
+	
+	#MButton:: ToggleAlwaysOnTop() ; [HGE] Browser forward
+	^#MButton:: MouseComeHome()
+	+#x::MouseComeHome()
+	^#x:: MouseComeHome()
 
 ; [HGE] Workaround for lack of additional mouse buttons and really crappy and expensive mice with them
 	^MButton:: Send {Browser_Back} ; [HGE] Send browser back
@@ -58,8 +87,23 @@ Menu, Tray, Add, Close Network Messages, LbSearchAndClose
 	; +#r::ProcessRegExReplaceText_X(ID)
 	; +#r::ProcessRegExReplaceText_X("label_in_quotes")
 
-#IfWinActive ahk_class PuTTYConfigBox  ; Shortcuts for Putty Config window 
-	; Validation to enable  start button quick key press on Putty
+
+TestPlaceHolderPaths(){
+	IniRead, BaseString, %IniSettingsFilePath%, UserDefinedPaths, TestMe
+	BaseString := ReplacePlaceholderStrings(BaseString)
+	MsgBox, %BaseString%
+}
+
+MouseComeHome(){
+	; CoordMode, Mouse, Screen
+	CoordMode, Mouse, Window
+	WinGetPos, , , ActWinWidth, ActWinHeight, A
+	MouseMove, (ActWinWidth)/2, (ActWinHeight)/2, 0
+}
+
+
+#IfWinActive ahk_class PuTTYConfigBox  ; Putty Config window 
+	; Validation to enable  start button quick key press on Putty, very convenient 
 	; Putty Window info
 	; KiTTY Configuration
 	; ahk_class PuTTYConfigBox
@@ -78,8 +122,42 @@ Menu, Tray, Add, Close Network Messages, LbSearchAndClose
 		return
 #IfWinActive
 
-#IfWinActive ahk_class #32770  ; Shortcuts for Putty Accept server session cert window 
-	; Validation to enable accept button quick key press on Putty
+#IfWinActive ahk_class KiTTY  ; Putty Accept server session cert window 
+	; ^ --> Control key
+	; ! --> Alt key
+	^!up::Send {PgUp}
+	^!down::Send {PgDn}
+	
+	!d:: ; Putty Duplicate session command (since hotkey is not working for me)
+		Send ! d
+		Send {Alt up}
+	return
+
+	^!c:: ; Putty shortcut to copy all text to clipboard (again since hotkey is not working...)
+		Send ! o
+		Send {Alt up}
+	return
+
+	^!s:: ; Putty shortcut to start WinSCP
+		Send +{F3}
+	return
+
+	^!l:: ; Putty shortcut to clear window text and scrollback
+		Send ^l
+		Sleep 100 
+		Send ! l
+		Send {Alt up}
+		Send {Control up}
+		; Send {Control down}l
+		; Sleep 10 
+		; Send {Alt down}{space}
+		; Sleep 100 
+	return
+
+#IfWinActive
+
+#IfWinActive ahk_class #32770  ; Putty Accept server session cert window 
+	; Validation to enable accept button quick key press on Putty, very convenient 
 	; Putty Window info
 	; PuTTY Security Alert
 	; ahk_class #32770

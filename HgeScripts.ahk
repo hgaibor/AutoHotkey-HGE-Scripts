@@ -7,6 +7,7 @@
 ; * Latest version: https://github.com/hgaibor/AutoHotkey-HGE-Scripts
 ; * History:
 ; *		
+; *		2026-10-21   Last changes and improvements before refactoring code for AHKv2
 ; *		2021-09-29   Imported Gist to a repository for better tracking and updating, 
 ; *								 this history won't be updated anymore..
 ; *		2021-02-10	 Added more functionalities and multiple parameter-based calls 
@@ -174,7 +175,18 @@ ReplacePlaceholderStrings(BaseString){
 	; Placeholders for standard AHK variables
 	SanitizedString := StrReplace(SanitizedString, "{A_YYYY}", A_YYYY)
 	SanitizedString := StrReplace(SanitizedString, "{A_Year}", A_year)
+
+	Previous_A_YYYY := A_YYYY
+	Previous_A_YYYY --
+	SanitizedString := StrReplace(SanitizedString, "{A_Year-1}", Previous_A_YYYY)
+
 	SanitizedString := StrReplace(SanitizedString, "{A_MM}", A_MM)
+
+	Previous_Month := A_MM
+	Previous_Month --
+	Previous_A_MM := Format("{:02}", Previous_Month)
+	SanitizedString := StrReplace(SanitizedString, "{A_MM-1}", Previous_A_MM)
+
 	SanitizedString := StrReplace(SanitizedString, "{A_Mon}", A_Mon)
 	SanitizedString := StrReplace(SanitizedString, "{A_DD}", A_DD)
 	SanitizedString := StrReplace(SanitizedString, "{A_MDay}", A_MDay)
@@ -190,6 +202,8 @@ ReplacePlaceholderStrings(BaseString){
 	SanitizedString := StrReplace(SanitizedString, "{A_Sec}", A_Sec)
 	SanitizedString := StrReplace(SanitizedString, "{A_MSec}", A_MSec)
 	SanitizedString := StrReplace(SanitizedString, "{A_Now}", A_Now)
+	
+	SanitizedString := StrReplace(SanitizedString, "{A_LineBreak}", "`n")
 
 	; Placeholders for user-defined paths
 	; UserDefinedPathVar := CleanUpPathString(BaseString, LeftTrim:=true, RightTrim:=true, SanitizeChar:="\")

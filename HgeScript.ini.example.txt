@@ -138,6 +138,38 @@
 	WinRDP-CommandArgs=
 	WinRDP-RunAsAdmin="no"
 
+	WinCMD-AhkExeName="ahk_exe WindowsTerminal.exe"
+	WinCMD-AhkGroupName="WinCMDInstances"
+	WinCMD-ProgramName="Windows CMD (Terminal)"
+	WinCMD-CommandExe="cmd.exe /k "cd /d {A_UserFolder_Path}""
+	WinCMD-CommandPath=""
+	WinCMD-CommandArgs=
+	WinCMD-RunAsAdmin="no"
+
+	Obsidian-AhkExeName="ahk_exe Obsidian.exe"
+	Obsidian-AhkGroupName="ObsidianInstances"
+	Obsidian-ProgramName="Obsidian KB"
+	Obsidian-CommandExe="{A_UserFolder_Path}\AppData\Local\Programs\Obsidian\Obsidian.exe"
+	Obsidian-CommandPath="{A_UserFolder_Path}AppData\Local\Programs\Obsidian"
+	Obsidian-CommandArgs=""
+	Obsidian-RunAsAdmin="no"
+
+	KittyConfig-AhkExeName="KiTTY Configuration"
+	KittyConfig-AhkGroupName="KittyConfigInstances"
+	KittyConfig-ProgramName="Kitty"
+	KittyConfig-CommandExe="{A_User_Defined_Path_5}\Apps\Kitty\KittyLKL.exe"
+	KittyConfig-CommandPath="{A_User_Defined_Path_5}\Apps\Kitty\"
+	KittyConfig-CommandArgs=
+	KittyConfig-RunAsAdmin="no"
+
+	KittySessions-AhkExeName="ahk_class KiTTY"
+	KittySessions-AhkGroupName="KittySessionsInstances"
+	KittySessions-ProgramName="Kitty"
+	KittySessions-CommandExe="{A_User_Defined_Path_5}\Apps\Kitty\KittyLKL.exe"
+	KittySessions-CommandPath="{A_User_Defined_Path_5}\Apps\Kitty\"
+	KittySessions-CommandArgs=
+	KittySessions-RunAsAdmin="no"
+
 	SlackDesktop-AhkExeName="ahk_exe slack.exe"
 	SlackDesktop-AhkGroupName="SlackInstances"
 	SlackDesktop-ProgramName="Slack Desktop App"
@@ -145,47 +177,6 @@
 	SlackDesktop-CommandPath="{A_UserFolder_Path}\AppData\Local\slack\"
 	SlackDesktop-CommandArgs=""
 	SlackDesktop-RunAsAdmin="no"
-
-
-[ShowOrRunWebSite]
-	WebSlack-BrowserExe="{A_ProgramFiles_Path}\Google\Chrome\Application\chrome.exe"
-	WebSlack-BrowserPath="{A_ProgramFiles_Path}\Google\Chrome\Application\"
-	WebSlack-AhkSearchWindowTitle="Slack |"
-	WebSlack-AhkGroupName="WebSlackInstances"
-	WebSlack-SiteName="Slack Web App"
-	WebSlack-Arguments1="--profile-directory="Default" "
-	WebSlack-Arguments2="--app="https://app.slack.com/client/" "
-	WebSlack-Arguments3=""
-	WebSlack-Arguments4=""
-	WebSlack-Arguments5=""
-	WebSlack-Arguments6=""
-	WebSlack-RunAsAdmin="no"
-	
-	WS-BrowserExe="{A_ProgramFiles_Path}\Google\Chrome\Application\chrome.exe"
-	WS-BrowserPath="{A_ProgramFiles_Path}\Google\Chrome\Application\"
-	WS-AhkSearchWindowTitle="WhatsApp"
-	WS-AhkGroupName="WSInstances"
-	WS-SiteName="WhatsApp Web"
-	WS-Arguments1="--profile-directory="Default" "
-	WS-Arguments2="--new-window "https://web.whatsapp.com/""
-	WS-Arguments3=""
-	WS-Arguments4=""
-	WS-Arguments5=""
-	WS-Arguments6=""
-	WS-RunAsAdmin="no"
-
-	SngMeet-BrowserExe="{A_ProgramFiles_Path}\Google\Chrome\Application\chrome.exe"
-	SngMeet-BrowserPath="{A_ProgramFiles_Path}\Google\Chrome\Application\"
-	SngMeet-AhkSearchWindowTitle="Sangoma Meet"
-	SngMeet-AhkGroupName="SMeetInstances"
-	SngMeet-SiteName="Sangoma Meet"
-	SngMeet-Arguments1="--profile-directory="Default" "
-	SngMeet-Arguments2="--new-window "https://meet.sangoma.com/""
-	SngMeet-Arguments3=""
-	SngMeet-Arguments4=""
-	SngMeet-Arguments5=""
-	SngMeet-Arguments6=""
-	SngMeet-RunAsAdmin="no"
 
 
 [ShowOpenWebSiteWithInput]
@@ -199,6 +190,61 @@
 	# WsSend-RegExDeleteFromInput1="i)[^\d]"
 	WsSend-RegExInsertInput1="i)\{REPLACE_INPUT1\}"
 
+	YouTubeVideo-SiteName="YouTube"
+	# YouTubeVideo-BrowserProfile="Default"
+	YouTubeVideo-OpenTarget="New_Window"
+	YouTubeVideo-AhkSearchWindowTitle="YouTube Video"
+	YouTubeVideo-AhkGroupName="YouTubeInstances"
+	YouTubeVideo-BaseUrl="https://youtube.com"
+	YouTubeVideo-OpenWebSiteOperation="Open_Website"
+
+	YouTubeMusic-SiteName="YouTube Music"
+	# YouTubeMusic-BrowserProfile="Default"
+	YouTubeMusic-OpenTarget="New_Window"
+	YouTubeMusic-AhkSearchWindowTitle="- YouTube Music"
+	YouTubeMusic-AhkGroupName="YouTubeMusicInstances"
+	YouTubeMusic-BaseUrl="https://music.youtube.com/"
+	YouTubeMusic-OpenWebSiteOperation="Open_Website"
+
+	GoogleDrive-SiteName="Google Drive"
+	GoogleDrive-BrowserProfile="Default"
+	GoogleDrive-OpenTarget="New_Window"
+	GoogleDrive-AhkSearchWindowTitle="Google Drive"
+	GoogleDrive-AhkGroupName="GoogleDrivePanelInstances"
+	GoogleDrive-BaseUrl="https://drive.google.com/drive/u/0/home"
+	GoogleDrive-OpenWebSiteOperation="Open_Website"
+
+	GMail-SiteName="Google Mail"
+	GMail-BaseUrl="https://mail.google.com/mail/u/0/#inbox"
+	GMail-AhkSearchWindowTitle="WinTittle Here"
+	GMail-AhkGroupName="GmailInstances"
+	GMail-OpenTarget="New_Window"
+	GMail-OpenWebSiteOperation="Open_Website"
+
+
+	Whois1-SiteName="Whois lookup at https://ipinfo.io/"
+	Whois1-BaseUrl="https://ipinfo.io/{REPLACE_INPUT1}"
+	Whois1-BrowserProfile="Default"
+	Whois1-AhkSearchWindowTitle="DO_NOT_SEARCH"
+	Whois1-AhkGroupName="WhoisInstances"
+	Whois1-OpenTarget="New_Window"
+	Whois1-OpenWebSiteOperation="Open_Website"
+	Whois1-NameInput1="Enter IP address"
+	; Whois1-RegExDeleteFromInput1=""
+	Whois1-RegExDeleteFromInput1="i)[^\d\.\:]|"
+	Whois1-RegExInsertInput1="i)\{REPLACE_INPUT1\}"
+
+	Whois2-SiteName="Whois lookup at https://ip.me/whois/"
+	Whois2-BaseUrl="https://ip.me/whois/{REPLACE_INPUT1}"
+	Whois2-BrowserProfile="Default"
+	Whois2-AhkSearchWindowTitle="DO_NOT_SEARCH"
+	Whois2-AhkGroupName="WhoisInstances"
+	Whois2-OpenTarget="New_Window"
+	Whois2-OpenWebSiteOperation="Open_Website"
+	Whois2-NameInput1="Enter IP address"
+	; Whois2-RegExDeleteFromInput1=""
+	Whois2-RegExDeleteFromInput1="i)[^\d\.\:]|"
+	Whois2-RegExInsertInput1="i)\{REPLACE_INPUT1\}"
 
 [CreateOpenFolder_X]
 	# Folder slots for ProcessFolderSlot_X function
